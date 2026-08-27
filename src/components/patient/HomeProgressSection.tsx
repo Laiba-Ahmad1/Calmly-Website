@@ -1,0 +1,94 @@
+// src/components/patient/HomeProgressSection.tsx
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+interface HomeProgressSectionProps {
+  weeklyJournalCount: string;
+  weeklyExerciseCount: string;
+  weeklyCheckinScore: string;
+  therapistAdvice: string[];
+}
+
+export default function HomeProgressSection({
+  weeklyJournalCount,
+  weeklyExerciseCount,
+  weeklyCheckinScore,
+  therapistAdvice,
+}: HomeProgressSectionProps) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={sectionRef}
+      className={`px-8 pb-12 sm:px-12 transition-all duration-300 ease-out ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      }`}
+    >
+      <h2 className="font-heading text-xl font-bold text-heading">
+        Your weekly progress
+      </h2>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <ProgressCard label="Journal" value={weeklyJournalCount} />
+        <ProgressCard label="Exercises" value={weeklyExerciseCount} />
+        <ProgressCard label="Weekly check-in" value={weeklyCheckinScore} />
+      </div>
+
+      <h2 className="mt-12 font-heading text-xl font-bold text-heading">
+        Therapist advice
+      </h2>
+
+      <div className="mt-6 flex flex-wrap items-center">
+        {therapistAdvice.map((text, i) => (
+          <div key={text} className="flex items-center">
+            <AdviceCard text={text} />
+            {i < therapistAdvice.length - 1 && <AdviceConnector />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProgressCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-green/30 bg-green/15 p-5 text-center">
+      <p className="font-body text-2xl font-extrabold text-heading">{value}</p>
+      <p className="mt-1 text-sm opacity-60">{label}</p>
+    </div>
+  );
+}
+
+function AdviceCard({ text }: { text: string }) {
+  return (
+    <div className="flex w-44 flex-col items-center gap-3 rounded-2xl border border-green/30 bg-green/15 p-6 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <p className="text-sm font-medium text-text">{text}</p>
+    </div>
+  );
+}
+
+function AdviceConnector() {
+  return (
+    <div className="h-0 w-8 shrink-0 border-t-[3px] border-dotted border-green/50" />
+  );
+}
