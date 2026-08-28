@@ -19,6 +19,13 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/home", "/quiz", "/journal", "/exercises", "/therapist/:path*"],
+  matcher: [
+    "/",
+    "/home",
+    "/quiz",
+    "/journal",
+    "/exercises",
+    "/therapist/:path*",
+  ],
   // add whichever patient/therapist routes should require login
 };
