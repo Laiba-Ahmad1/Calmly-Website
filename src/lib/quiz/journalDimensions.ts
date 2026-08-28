@@ -1,5 +1,5 @@
 // lib/quiz/journalDimensions.ts
-import JournalEntry from "@/models/JournalEntry";
+import Journal from "@/models/Journal";
 import { callAI } from "@/lib/quiz/aiClient";
 
 const LOOKBACK_DAYS = 14;
@@ -12,7 +12,7 @@ export async function analyzeJournalDimensions(
   const since = new Date();
   since.setDate(since.getDate() - LOOKBACK_DAYS);
 
-  const entries = await JournalEntry.find({ userId, createdAt: { $gte: since } })
+  const entries = await Journal.find({ userId, createdAt: { $gte: since } })
     .sort({ createdAt: -1 })
     .limit(MAX_ENTRIES)
     .select("content createdAt");

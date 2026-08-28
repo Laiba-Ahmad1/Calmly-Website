@@ -100,6 +100,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Button from "@/components/shared/Button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -142,14 +143,14 @@ export default function LoginPage() {
 
   return (
     <main>
-      <h1 className="text-3xl mb-1 text-heading">Welcome back</h1>
-      <p className="text-sm text-text/70 mb-8">
+      <h1 className="font-bold text-background text-3xl mb-1 ">Welcome back</h1>
+      <p className="text-sm text-background/70 mb-8">
         Log in to continue your journal streak.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold mb-1 text-text">Email</label>
+          <label className="block text-sm font-semibold mb-1 text-background">Email</label>
           <input
             type="email"
             required
@@ -161,7 +162,7 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1 text-text">Password</label>
+          <label className="block text-sm font-semibold mb-1 text-background">Password</label>
           <input
             type="password"
             required
@@ -174,17 +175,25 @@ export default function LoginPage() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <button
+        {/* <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-green py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
+          className="w-full rounded-lg bg-background py-2.5 text-sm font-semibold text-green transition hover:brightness-95 disabled:opacity-60"
         >
           {loading ? "Logging in..." : "Log in"}
-        </button>
+        </button> */}
+        <Button
+          type="submit"
+          disabled={loading}
+          fillColor="rgb(var(--color-background))"
+          className="w-full text-green"
+        >
+          {loading ? "Logging in..." : "Log in"}
+        </Button>
 
-        <p className="text-center text-sm text-text/70">
+        <p className="text-center text-sm text-background/70">
           Don't have an account?{" "}
-          <Link href="/signup" className="font-medium text-heading underline">
+          <Link href="/signup" className="font-medium text-background underline">
             Sign up
           </Link>
         </p>

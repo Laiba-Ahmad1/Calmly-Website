@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Button from "@/components/shared/Button";
 import Link from "next/link";
 
 type Role = "patient" | "therapist";
@@ -79,8 +80,8 @@ export default function SignupPage() {
     <main>
       {step === 1 && (
         <>
-          <h1 className="text-3xl mb-1 text-heading">Create your account</h1>
-          <p className="text-sm text-text/70 mb-8">
+          <h1 className="text-3xl mb-1 text-background">Create your account</h1>
+          <p className="text-sm text-background/70 mb-8">
             First, tell us which side you're on.
           </p>
 
@@ -106,9 +107,9 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <p className="mt-8 text-center text-sm text-text/70">
+          <p className="mt-8 text-center text-sm text-background/70">
             Already have an account?{" "}
-            <Link href="/login" className="font-medium text-heading underline">
+            <Link href="/login" className="font-medium text-background underline">
               Log in
             </Link>
           </p>
@@ -119,15 +120,15 @@ export default function SignupPage() {
         <>
           <button
             onClick={() => setStep(1)}
-            className="mb-4 text-xs text-text/60 hover:underline"
+            className="mb-4 text-xs text-background/60 hover:underline"
           >
             ← back
           </button>
 
-          <h1 className="text-3xl mb-1 text-heading">
+          <h1 className="text-3xl mb-1 text-background">
             {role === "patient" ? "About you" : "Verify your practice"}
           </h1>
-          <p className="text-sm text-text/70 mb-6">
+          <p className="text-sm text-background/70 mb-6">
             {role === "patient"
               ? "This helps us tailor your dashboard."
               : "We review documents before you get patient access."}
@@ -135,7 +136,7 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-text">Full name</label>
+              <label className="block text-sm font-medium mb-1 text-background">Full name</label>
               <input
                 required
                 value={name}
@@ -145,7 +146,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-text">Email</label>
+              <label className="block text-sm font-medium mb-1 text-background">Email</label>
               <input
                 type="email"
                 required
@@ -156,7 +157,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-text">Password</label>
+              <label className="block text-sm font-medium mb-1 text-background">Password</label>
               <input
                 type="password"
                 required
@@ -169,7 +170,7 @@ export default function SignupPage() {
 
             {role === "patient" && (
               <div>
-                <label className="block text-sm font-medium mb-1 text-text">
+                <label className="block text-sm font-medium mb-1 text-background">
                   What's mostly on your mind?
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -193,7 +194,7 @@ export default function SignupPage() {
 
             {role === "therapist" && (
               <div>
-                <label className="block text-sm font-medium mb-1 text-text">
+                <label className="block text-sm font-medium mb-1 text-background">
                   License or certificate
                 </label>
                 <input
@@ -203,21 +204,26 @@ export default function SignupPage() {
                   onChange={(e) => setDocument(e.target.files?.[0] ?? null)}
                   className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-xs file:mr-3 file:rounded-md file:border-0 file:bg-green file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
                 />
-                <p className="mt-1 text-xs text-text/60">
+                <p className="mt-1 text-xs text-background/60">
                   PDF or image. We'll review this before activating your account.
                 </p>
               </div>
             )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <button
+              <Button
+                       type="submit"
+                       disabled={loading}
+                       fillColor="rgb(var(--color-background))"
+                       className="w-full text-green disabled:opacity-60"
+             >{loading ? "Creating account..." : "Create account"}</Button>
+            {/* <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-green py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
+              className="w-full rounded-lg  py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
             >
               {loading ? "Creating account..." : "Create account"}
-            </button>
+            </button> */}
           </form>
         </>
       )}

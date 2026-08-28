@@ -1,4 +1,7 @@
-// Weekly adaptive quiz — question selection shifts based on category weights
+// Weekly a wights
+import Quiz from "@/components/patient/Quiz";
 export default function QuizPage() {
-  return null; // TODO
+  return (
+    <Quiz/>
+  );
 }
