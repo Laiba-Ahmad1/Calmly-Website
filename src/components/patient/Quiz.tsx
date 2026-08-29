@@ -1,8 +1,11 @@
 // components/Quiz.tsx
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useQuiz } from "@/hooks/useQuiz";
+import { formatTimeUntil } from "@/lib/quiz/countdown";
 import Button from "@/components/shared/Button";
 
 export default function Quiz() {
@@ -14,405 +17,260 @@ export default function Quiz() {
     submit,
     submitting,
     submitted,
+    alreadyCompleted,
+    completedScore,
+    nextAvailableAt,
   } = useQuiz();
-
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [countdown, setCountdown] = useState("");
+  const [lastResult, setLastResult] = useState<{ totalScore: number; maxScore: number } | null>(
+    null
+  );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[rgb(var(--color-green))] flex items-center justify-center">
-        <div className="text-[rgb(var(--color-heading))] font-[var(--font-body)]">
-          Loading your quiz…
-        </div>
-      </div>
-    );
-  }
+  // tick the countdown every minute while showing the "already completed" state
+  useEffect(() => {
+    if (!nextAvailableAt) return;
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[rgb(var(--color-green))] flex items-center justify-center">
-        <div className="bg-[rgb(var(--color-background))] rounded-[30px] px-10 py-8 text-center">
-          <p className="text-[rgb(var(--color-text))] font-[var(--font-body)]">
-            {error}
-          </p>
-        </div>
-      </div>
-    );
-  }
+    function tick() {
+      setCountdown(formatTimeUntil(nextAvailableAt!));
+    }
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-[rgb(var(--color-green))] flex items-center justify-center px-6">
-        <div className="w-full max-w-3xl bg-[rgb(var(--color-background))] rounded-[38px] p-12 text-center shadow-sm">
-          <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-[rgb(var(--color-green))]/30 flex items-center justify-center">
-            <span className="text-4xl">🌱</span>
-          </div>
-
-          <h2
-            className="text-3xl text-[rgb(var(--color-heading))]"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            Thanks for checking in
-          </h2>
-
-          <p
-            className="mt-3 text-[rgb(var(--color-text))]/70"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            Your answers this week will help shape next week's check-in.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!questions.length) {
-    return (
-      <div className="min-h-screen bg-[rgb(var(--color-green))] flex items-center justify-center">
-        <div className="bg-[rgb(var(--color-background))] rounded-[30px] px-10 py-8 text-center">
-          <p
-            className="text-[rgb(var(--color-text))]/70"
-            style={{ fontFamily: "var(--font-body)" }}
-          >
-            No quiz available this week.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const question = questions[currentIndex];
-  const isLast = currentIndex === questions.length - 1;
-  const selected = answers[question.id];
-
-  function selectOption(option: string) {
-    setAnswers((prev) => ({
-      ...prev,
-      [question.id]: option,
-    }));
-  }
+    tick();
+    const interval = setInterval(tick, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [nextAvailableAt]);
 
   async function handleNext() {
+    const question = questions[currentIndex];
+    const isLast = currentIndex === questions.length - 1;
+
     if (isLast) {
       const responses = questions.map((q) => ({
         questionId: q.id,
         selectedOption: answers[q.id],
       }));
-
-      await submit(responses);
+      const result = await submit(responses);
+      if (result) {
+        setLastResult({ totalScore: result.totalScore, maxScore: result.maxScore });
+      }
     } else {
       setCurrentIndex((i) => i + 1);
     }
   }
 
-  function handleBack() {
-    if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-    }
+  function selectOption(questionId: string, option: string) {
+    setAnswers((prev) => ({ ...prev, [questionId]: option }));
   }
 
   return (
-    <div className="min-h-screen bg-[rgb(var(--color-green))] px-6 py-10 relative overflow-hidden">
-      {/* Decorative background circles */}
-      <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white/10" />
-      <div className="absolute -bottom-32 -right-20 w-80 h-80 rounded-full bg-white/10" />
+    <div className="relative min-h-screen overflow-hidden bg-green p-4 sm:p-8">
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/10" />
+      <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-white/10" />
 
-      {/* Menu button — visual only, matching homepage */}
-      <button
-        className="
-          absolute
-          top-8
-          left-8
-          w-12
-          h-12
-          rounded-full
-          bg-[rgb(var(--color-background))]
-          flex
-          items-center
-          justify-center
-          text-[rgb(var(--color-text))]
-          shadow-sm
-        "
-        aria-label="Menu"
-      >
-        <span className="text-xl">☰</span>
-      </button>
+      <div className="relative mx-auto max-w-2xl">
+        <div className="mb-4 flex items-center justify-between px-2">
+          <button
+            aria-label="Open menu"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-background text-lg shadow-sm transition hover:scale-105"
+          >
+            ☰
+          </button>
+        </div>
 
-      {/* Main card */}
-      <div
-        className="
-          relative
-          z-10
-          max-w-6xl
-          mx-auto
-          bg-[rgb(var(--color-background))]
-          rounded-[38px]
-          p-8
-          md:p-12
-          lg:p-14
-          shadow-sm
-        "
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-12 lg:gap-16">
-          {/* LEFT SIDE */}
-          <div className="flex flex-col items-center">
-            {/* Plant illustration */}
-            <div className="w-52 h-52 flex items-center justify-center relative">
-              <div className="absolute w-40 h-40 rounded-full bg-[rgb(var(--color-green))]/20" />
-              <div className="absolute w-32 h-32 rounded-full bg-[rgb(var(--color-green))]/15 translate-x-10 translate-y-8" />
-
-              <div className="relative text-center">
-                <div className="text-7xl">🌱</div>
-              </div>
-            </div>
-
-            {/* Week */}
-            <h3
-              className="
-                text-xl
-                font-medium
-                text-[rgb(var(--color-heading))]
-                mt-2
-              "
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Week {weekNumber} check-in
-            </h3>
-
-            {/* Question dots */}
-            <div className="flex items-center gap-3 mt-8">
-              {questions.map((_, index) => (
-                <div key={index} className="flex items-center">
-                  <div
-                    className={`
-                      w-5
-                      h-5
-                      rounded-full
-                      border-2
-                      flex
-                      items-center
-                      justify-center
-                      transition-all
-                      ${
-                        index === currentIndex
-                          ? "border-[rgb(var(--color-green))]"
-                          : index < currentIndex
-                            ? "border-[rgb(var(--color-green))] bg-[rgb(var(--color-green))]"
-                            : "border-[rgb(var(--color-green))]/40"
-                      }
-                    `}
-                  >
-                    {index <= currentIndex && (
-                      <div className="w-2 h-2 rounded-full bg-[rgb(var(--color-green))]" />
-                    )}
-                  </div>
-
-                  {index < questions.length - 1 && (
-                    <div className="w-5 h-px bg-[rgb(var(--color-green))]/30" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <p
-              className="mt-5 text-sm text-[rgb(var(--color-heading))]"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Question {currentIndex + 1} of {questions.length}
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-background p-8 shadow-sm sm:p-12">
+          {loading && (
+            <p className="py-16 text-center font-body text-sm text-text/60">
+              Loading your check-in…
             </p>
+          )}
 
-            {/* Encouragement box */}
-            <div className="mt-10 w-full max-w-[250px] border border-[rgb(var(--color-green))]/25 rounded-[20px] p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-[rgb(var(--color-green))]/20 flex items-center justify-center shrink-0">
-                <span className="text-xl">🌿</span>
-              </div>
+          {!loading && error && (
+            <p className="py-16 text-center font-body text-sm text-red-400">{error}</p>
+          )}
 
-              <div>
-                <p
-                  className="font-medium text-[rgb(var(--color-text))]"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  You're growing
-                </p>
+          {!loading && !error && (alreadyCompleted || submitted) && (
+            <CompletedState
+              submitted={submitted}
+              score={submitted ? lastResult ?? completedScore : completedScore}
+              weekNumber={weekNumber}
+              nextAvailableAt={nextAvailableAt}
+              countdown={countdown}
+            />
+          )}
 
-                <p
-                  className="text-xs mt-1 text-[rgb(var(--color-text))]/60 leading-relaxed"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  Keep going, you're doing great!
-                </p>
-              </div>
-            </div>
-          </div>
+          {!loading && !error && !alreadyCompleted && !submitted && questions.length === 0 && (
+            <p className="py-16 text-center font-body text-sm text-text/60">
+              No quiz available this week.
+            </p>
+          )}
 
-          {/* RIGHT SIDE */}
-          <div className="flex flex-col">
-            {/* Heading */}
-            <div>
-              <h1
-                className="
-                  text-4xl
-                  md:text-5xl
-                  text-[rgb(var(--color-heading))]
-                "
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                Weekly quiz
-              </h1>
-
-              <p
-                className="
-                  mt-2
-                  text-base
-                  text-[rgb(var(--color-text))]
-                  opacity-60
-                "
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                Check in with how you've been feeling
-              </p>
-            </div>
-
-            {/* Decorative divider */}
-            <div className="flex items-center gap-4 my-8">
-              <div className="flex-1 h-px bg-[rgb(var(--color-heading))]/20" />
-
-              <span className="text-[rgb(var(--color-green))] text-lg">🌿</span>
-
-              <div className="flex-1 h-px bg-[rgb(var(--color-heading))]/20" />
-            </div>
-
-            {/* Question */}
-            <h2
-              className="
-                text-2xl
-                md:text-3xl
-                leading-relaxed
-                text-[rgb(var(--color-text))]
-                max-w-3xl
-              "
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              {question.question}
-            </h2>
-
-            {/* Options */}
-            <div className="flex flex-col gap-3 mt-8">
-              {question.options.map((option) => {
-                const isSelected = selected === option;
-
-                return (
-                  <button
-                    key={option}
-                    onClick={() => selectOption(option)}
-                    className={`
-                      w-full
-                      text-left
-                      px-5
-                      py-4
-                      rounded-[16px]
-                      border
-                      transition-all
-                      duration-200
-                      flex
-                      items-center
-                      gap-4
-                      ${
-                        isSelected
-                          ? `
-                            border-[rgb(var(--color-green))]
-                            bg-[rgb(var(--color-green))]/10
-                          `
-                          : `
-                            border-[rgb(var(--color-heading))]/15
-                            hover:border-[rgb(var(--color-green))]/50
-                            hover:bg-[rgb(var(--color-green))]/5
-                          `
-                      }
-                    `}
-                  >
-                    {/* Radio circle */}
-                    <span
-                      className={`
-                        w-7
-                        h-7
-                        rounded-full
-                        border-2
-                        shrink-0
-                        flex
-                        items-center
-                        justify-center
-                        ${
-                          isSelected
-                            ? "border-[rgb(var(--color-green))]"
-                            : "border-[rgb(var(--color-heading))]/25"
-                        }
-                      `}
-                    >
-                      {isSelected && (
-                        <span className="w-3 h-3 rounded-full bg-[rgb(var(--color-green))]" />
-                      )}
-                    </span>
-
-                    <span
-                      className="text-[rgb(var(--color-text))]"
-                      style={{ fontFamily: "var(--font-body)" }}
-                    >
-                      {option}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-10">
-              {/* Back */}
-              <button
-                onClick={handleBack}
-                disabled={currentIndex === 0}
-                className="
-                  px-6
-                  py-3
-                  rounded-[14px]
-                  bg-[rgb(var(--color-green))]/10
-                  text-[rgb(var(--color-heading))]
-                  font-medium
-                  transition-all
-                  hover:bg-[rgb(var(--color-green))]/20
-                  disabled:opacity-30
-                  disabled:cursor-not-allowed
-                "
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                ← Back
-              </button>
-
-              {/* Next */}
-              <button
-                onClick={handleNext}
-                disabled={!selected || submitting}
-                className="
-                  px-8
-                  py-3
-                  rounded-[14px]
-                  bg-[rgb(var(--color-green))]
-                  text-[rgb(var(--color-background))]
-                  font-medium
-                  transition-all
-                  hover:opacity-90
-                  disabled:opacity-40
-                  disabled:cursor-not-allowed
-                "
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                {submitting ? "Saving…" : isLast ? "Finish →" : "Next →"}
-              </button>
-            </div>
-          </div>
+          {!loading && !error && !alreadyCompleted && !submitted && questions.length > 0 && (
+            <ActiveQuiz
+              question={questions[currentIndex]}
+              currentIndex={currentIndex}
+              total={questions.length}
+              weekNumber={weekNumber}
+              selected={answers[questions[currentIndex].id]}
+              submitting={submitting}
+              onSelect={(option) => selectOption(questions[currentIndex].id, option)}
+              onNext={handleNext}
+            />
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+/* =========================================================
+   COMPLETED / ALREADY-CHECKED-IN STATE
+========================================================= */
+
+function CompletedState({
+  submitted,
+  score,
+  weekNumber,
+  nextAvailableAt,
+  countdown,
+}: {
+  submitted: boolean;
+  score: { totalScore: number; maxScore: number } | null;
+  weekNumber: number | null;
+  nextAvailableAt: Date | null;
+  countdown: string;
+}) {
+  return (
+    <div className="relative py-4 text-center">
+      {/* decorative plant, tucked in the corner */}
+      <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 opacity-15 sm:h-48 sm:w-48">
+        <Image src="/plant.png" alt="" fill className="object-contain" />
+      </div>
+
+      <div className="relative mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-green/30 bg-green/10 text-3xl shadow-sm">
+        🌱
+      </div>
+
+      <h2 className="relative font-heading text-2xl font-bold text-heading">
+        {submitted ? "Thanks for checking in" : "You've already checked in this week"}
+      </h2>
+      <p className="relative mx-auto mt-2 max-w-xs font-body text-sm text-text/70">
+        {submitted
+          ? "Your answers this week will help shape next week's check-in."
+          : "Come back for your next weekly check-in."}
+      </p>
+
+      
+
+      {nextAvailableAt && !submitted && (
+        <>
+          <div className=" relative mx-auto mt-8 h-0 w-16 border-t-[3px] border-dotted border-green/50" />
+          <div className=" relative mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-green/30 bg-green/10 px-4 py-2 font-body text-xs font-medium text-text/70">
+            <ClockIcon />
+            <p className="text-xl">Next check-in in {countdown}</p>
+          </div>
+        </>
+      )}
+
+      <div className="relative mt-8 flex justify-center">
+        <Link href="/home">
+          <Button width="w-52">Back to home</Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   ACTIVE QUIZ STATE
+========================================================= */
+
+function ActiveQuiz({
+  question,
+  currentIndex,
+  total,
+  weekNumber,
+  selected,
+  submitting,
+  onSelect,
+  onNext,
+}: {
+  question: { id: string; question: string; options: string[] };
+  currentIndex: number;
+  total: number;
+  weekNumber: number | null;
+  selected: string | undefined;
+  submitting: boolean;
+  onSelect: (option: string) => void;
+  onNext: () => void;
+}) {
+  const isLast = currentIndex === total - 1;
+
+  return (
+    <div>
+      <div className="mb-8 flex items-center justify-between">
+        <span className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
+          Week {weekNumber} check-in
+        </span>
+        <span className="font-body text-xs font-semibold text-heading">
+          {currentIndex + 1}/{total}
+        </span>
+      </div>
+
+      <div className="mb-8 h-1.5 w-full rounded-full bg-green/15">
+        <div
+          className="h-1.5 rounded-full bg-green transition-all duration-300"
+          style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
+        />
+      </div>
+
+      <h2 className="mb-6 font-heading text-lg font-bold text-heading">{question.question}</h2>
+
+      <div className="flex flex-col gap-3">
+        {question.options.map((option) => (
+          <button
+            key={option}
+            onClick={() => onSelect(option)}
+            className={`rounded-2xl border px-4 py-3 text-left font-body text-sm transition-colors ${
+              selected === option
+                ? "border-green bg-green/15 text-text"
+                : "border-green/20 text-text/80 hover:border-green/50"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <Button
+          onClick={onNext}
+          disabled={!selected || submitting}
+          width="w-full"
+          className="disabled:pointer-events-none disabled:opacity-40"
+        >
+          {submitting ? "Saving…" : isLast ? "Finish" : "Next"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0 text-heading/70"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
   );
 }

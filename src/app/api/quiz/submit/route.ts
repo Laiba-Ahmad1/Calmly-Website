@@ -22,8 +22,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Patient profile not found" }, { status: 404 });
     }
 
-    const { responses } = await req.json(); // [{ questionId, selectedOption }]
-    const userId = user._id;
+    const weekNumber = getCurrentWeekNumber(new Date(user.createdAt));
+    const { weekStart, weekEnd } = getWeekWindow(new Date(user.createdAt), weekNumber);
+
+    // block resubmission — this week's quiz can only be completed once
+    const existingResult = await QuizResult.findOne({ userId: user._id, weekStart });
+    if (existingResult) {
+      return NextResponse.json(
+        { error: "This week's quiz has already been submitted." },
+        { status: 409 }
+      );
+    }
+
+    const { responses } = await req.json();
     const anxietyType = patientProfile.anxietyType;
 
     const questionIds = responses.map((r: any) => r.questionId);
@@ -34,24 +45,17 @@ export async function POST(req: NextRequest) {
       responses
     );
 
-    const weekNumber = getCurrentWeekNumber(new Date(user.createdAt));
-    const { weekStart, weekEnd } = getWeekWindow(new Date(user.createdAt), weekNumber);
-
-    const result = await QuizResult.findOneAndUpdate(
-      { userId, weekStart },
-      {
-        userId,
-        anxietyType,
-        weekStart,
-        weekEnd,
-        responses: processedResponses,
-        dimensionScores,
-        totalScore,
-        maxScore: questions.length * 4,
-        completedAt: new Date(),
-      },
-      { upsert: true, new: true }
-    );
+    const result = await QuizResult.create({
+      userId: user._id,
+      anxietyType,
+      weekStart,
+      weekEnd,
+      responses: processedResponses,
+      dimensionScores,
+      totalScore,
+      maxScore: questions.length * 4,
+      completedAt: new Date(),
+    });
 
     return NextResponse.json({ success: true, result });
   } catch (err) {

@@ -15,14 +15,24 @@ export function useQuiz() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [completedScore, setCompletedScore] = useState<{ totalScore: number; maxScore: number } | null>(null);
+  const [nextAvailableAt, setNextAvailableAt] = useState<Date | null>(null);
 
   useEffect(() => {
     fetch("/api/quiz/current")
       .then((res) => res.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
-        setQuestions(data.questions);
         setWeekNumber(data.weekNumber);
+
+        if (data.alreadyCompleted) {
+          setAlreadyCompleted(true);
+          setCompletedScore({ totalScore: data.totalScore, maxScore: data.maxScore });
+          setNextAvailableAt(new Date(data.nextAvailableAt));
+        } else {
+          setQuestions(data.questions);
+        }
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -39,7 +49,12 @@ export function useQuiz() {
           body: JSON.stringify({ responses }),
         });
         const data = await res.json();
-        if (data.error) throw new Error(data.error);
+
+        if (!res.ok) {
+          if (res.status === 409) setAlreadyCompleted(true);
+          throw new Error(data.error);
+        }
+
         setSubmitted(true);
         return data.result;
       } catch (err: any) {
@@ -49,7 +64,7 @@ export function useQuiz() {
         setSubmitting(false);
       }
     },
-    [],
+    []
   );
 
   return {
@@ -60,5 +75,8 @@ export function useQuiz() {
     submit,
     submitting,
     submitted,
+    alreadyCompleted,
+    completedScore,
+    nextAvailableAt,
   };
 }

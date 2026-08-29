@@ -1,22 +1,4 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --font-logo: var(--font-norican);
-  --font-body: var(--font-nunito);
-
-  --color-green: #a7bf85;
-  --color-background: #f0efea;
-  --color-heading: #858e6d;
-  --color-text: #3f4442;
-
-  --button-clr: var(--color-green);
-  --background: var(--color-background);
-  --heading: var(--color-heading);
-  --text: var(--color-text);
-} */
- @tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -25,12 +7,20 @@
   --font-body: var(--font-nunito);
   --font-heading: var(--font-manrope);
 
-  /* RGB channels (space-separated, no commas) so Tailwind's /opacity syntax works */
+  
   --color-green: 167 191 133;
   --color-background: 240 239 234;
   --color-heading: 133 142 109;
   --color-text: 63 68 66;
 
+  
+  --color-greensoft: 233 241 227;
+  --color-lavender: 183 160 217;
+  --color-lavendersoft: 242 238 250;
+  --color-peach: 224 147 124;
+  --color-peachsoft: 251 238 232;
+
+  
   --button-clr: rgb(var(--color-green));
   --background: rgb(var(--color-background));
   --heading: rgb(var(--color-heading));

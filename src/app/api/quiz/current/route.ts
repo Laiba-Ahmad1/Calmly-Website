@@ -4,6 +4,8 @@ import db from "@/lib/db";
 import { getQuizForUser } from "@/lib/quiz/personalization";
 import { getCurrentUser } from "@/lib/auth";
 import PatientProfile from "@/models/PatientProfile";
+import QuizResult from "@/models/QuizResult";
+import { getCurrentWeekNumber, getWeekWindow } from "@/lib/quiz/weeks";
 
 export async function GET() {
   try {
@@ -19,7 +21,22 @@ export async function GET() {
       return NextResponse.json({ error: "Patient profile not found" }, { status: 404 });
     }
 
-    const { weekNumber, questions, source } = await getQuizForUser({
+    const weekNumber = getCurrentWeekNumber(new Date(user.createdAt));
+    const { weekStart, weekEnd } = getWeekWindow(new Date(user.createdAt), weekNumber);
+
+    const existingResult = await QuizResult.findOne({ userId: user._id, weekStart });
+    if (existingResult) {
+      return NextResponse.json({
+        weekNumber,
+        alreadyCompleted: true,
+        completedAt: existingResult.completedAt,
+        totalScore: existingResult.totalScore,
+        maxScore: existingResult.maxScore,
+        nextAvailableAt: weekEnd, // when next week's quiz unlocks
+      });
+    }
+
+    const { questions, source } = await getQuizForUser({
       userId: user._id.toString(),
       anxietyType: patientProfile.anxietyType,
       accountCreatedAt: new Date(user.createdAt),
@@ -27,6 +44,7 @@ export async function GET() {
 
     return NextResponse.json({
       weekNumber,
+      alreadyCompleted: false,
       source,
       questions: questions.map((q) => ({
         id: q._id,

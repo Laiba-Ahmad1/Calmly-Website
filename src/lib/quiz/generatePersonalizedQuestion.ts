@@ -1,6 +1,6 @@
 // lib/quiz/generatePersonalizedQuestion.ts
 import QuizQuestion from "@/models/QuizQuestion";
-import JournalEntry from "@/models/JournalEntry";
+import Journal from "@/models/Journal";
 import { callAI } from "@/lib/quiz/aiClient";
 import { AnxietyType } from "@/lib/anxiety";
 
@@ -26,7 +26,10 @@ export async function generatePersonalizedQuestion({
   struggleScore,
 }: GenerateParams) {
   const [recentJournal, priorGenerated] = await Promise.all([
-    JournalEntry.find({ userId }).sort({ createdAt: -1 }).limit(5).select("content createdAt"),
+    Journal.find({ patientId: userId })
+  .sort({ createdAt: -1 })
+  .limit(5)
+  .select("feelings reflection mood sleepQuality createdAt"),
     QuizQuestion.find({ generatedForUserId: userId, dimension })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -34,8 +37,16 @@ export async function generatePersonalizedQuestion({
   ]);
 
   const journalContext = recentJournal.length
-    ? recentJournal.map((e: any) => `- ${e.content}`).join("\n")
-    : "(no recent journal entries)";
+  ? recentJournal
+      .map(
+        (e: any) =>
+          `- Mood: ${e.mood}/5
+  Sleep: ${e.sleepQuality}/5
+  Feelings: ${e.feelings}
+  Reflection: ${e.reflection}`
+      )
+      .join("\n")
+  : "(no recent journal entries)";
 
   const avoidRepeats = priorGenerated.length
     ? priorGenerated.map((q) => `- ${q.question}`).join("\n")

@@ -6,8 +6,10 @@ import { AnxietyType } from "@/lib/anxiety";
 import { getWeekWindow, getCurrentWeekNumber } from "@/lib/quiz/weeks";
 import { analyzeJournalDimensions } from "@/lib/quiz/journalDimensions";
 import mongoose from "mongoose";
+import { generatePersonalizedQuestion } from "@/lib/quiz/generatePersonalizedQuestion";
 
 const QUESTIONS_PER_WEEK = 5;
+const AI_GENERATED_SLOTS = 3; // cap how many AI questions get generated per week
 const EXCLUSION_WEEKS = 2; // don't repeat a question asked in the last N weeks
 const QUIZ_WEIGHT = 0.6;
 const JOURNAL_WEIGHT = 0.4;
@@ -56,7 +58,11 @@ export async function getQuizForUser({
 
 // ---- Week 1: one question per dimension, seed order, up to 5 ----
 async function selectBaselineQuestions(anxietyType: AnxietyType) {
-  const all = await QuizQuestion.find({ anxietyType, active: true }).sort({ createdAt: 1 });
+  const all = await QuizQuestion.find({
+  anxietyType,
+  active: true,
+  generated: false,
+}).sort({ createdAt: 1 });
 
   const seenDimensions = new Set<string>();
   const picked: IQuizQuestion[] = [];
@@ -90,7 +96,14 @@ async function selectPersonalizedQuestions({
   anxietyType: AnxietyType;
   weekStart: Date;
 }) {
-  const allQuestions = await QuizQuestion.find({ anxietyType, active: true });
+  const allQuestions = await QuizQuestion.find({
+  anxietyType,
+  active: true,
+  $or: [
+    { generated: false },
+    { generated: true, generatedForUserId: userId },
+  ],
+});
   const dimensions = [...new Set(allQuestions.map((q) => q.dimension))];
 
   const quizWeights = await getQuizBasedDimensionWeights(userId, dimensions);
@@ -106,6 +119,35 @@ async function selectPersonalizedQuestions({
   const rankedDimensions = dimensions.sort(
     (a, b) => combinedWeights[b] - combinedWeights[a]
   );
+  
+  const dimensionsNeedingQuestions = rankedDimensions
+  .filter(
+    (dimension) =>
+      !allQuestions.some(
+        (question) =>
+          question.dimension === dimension &&
+          question.generated &&
+          question.generatedForUserId?.toString() === userId
+      )
+  )
+    .slice(0, AI_GENERATED_SLOTS); // was QUESTIONS_PER_WEEK — capped generation to top 3 weakest dims
+
+const generatedQuestions = await Promise.all(
+  dimensionsNeedingQuestions.map((dimension) =>
+    generatePersonalizedQuestion({
+      userId,
+      anxietyType,
+      dimension,
+      struggleScore: combinedWeights[dimension],
+    }).catch(() => null)
+  )
+);
+
+for (const question of generatedQuestions) {
+  if (question !== null) {
+    allQuestions.unshift(question);
+  }
+}
 
   const excludedIds = await getRecentlyAskedQuestionIds(userId, weekStart);
 
