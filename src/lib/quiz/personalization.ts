@@ -38,10 +38,16 @@ export async function getQuizForUser({
     return { weekNumber, questions, source: existing.source };
   }
 
-  const questions =
+ const questions =
     weekNumber === 1
       ? await selectBaselineQuestions(anxietyType)
       : await selectPersonalizedQuestions({ userId, anxietyType, weekStart });
+
+  if (questions.length === 0) {
+    // Don't cache a broken result — next request will retry from scratch instead of being stuck all week
+    console.error(`getQuizForUser: got 0 questions for user ${userId}, week ${weekNumber}`);
+    return { weekNumber, questions: [], source: "none" };
+  }
 
   await QuizAssignment.create({
     userId,

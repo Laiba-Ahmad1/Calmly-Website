@@ -13,25 +13,25 @@ export async function analyzeJournalDimensions(
   since.setDate(since.getDate() - LOOKBACK_DAYS);
 
   const entries = await Journal.find({
-  patientId: userId,
-  createdAt: { $gte: since },
-})
-  .sort({ createdAt: -1 })
-  .limit(MAX_ENTRIES)
-  .select("feelings reflection mood sleepQuality createdAt");
+    patientId: userId,
+    date: { $gte: since },
+  })
+    .sort({ date: -1 })
+    .limit(MAX_ENTRIES)
+    .select("feelings reflection mood sleepQuality date");
 
-if (!entries.length) return null;
+  if (!entries.length) return null;
 
-const journalText = entries
-  .map(
-    (e: any) =>
-      `[${e.createdAt.toISOString().slice(0, 10)}]
+  const journalText = entries
+    .map(
+      (e: any) =>
+        `[${new Date(e.date).toISOString().slice(0, 10)}]
 Mood: ${e.mood}/5
 Sleep quality: ${e.sleepQuality}/5
 Feelings: ${e.feelings}
 Reflection: ${e.reflection}`
-  )
-  .join("\n\n");
+    )
+    .join("\n\n");
 
   const prompt = `You are scoring journal entries from a mental health app user against a fixed list of anxiety "dimensions".
 For each dimension below, output a struggle score from 0.0 (no signal of difficulty) to 1.0 (strong signal of difficulty), based only on what's in the journal entries.  If there is insufficient evidence to assess a dimension, return 0.5 (neutral — not enough information either way).

@@ -271,13 +271,32 @@ export default function BreathingExercise({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, phaseSeconds, phase]);
 
-  // auto-stop once the session hits the target cycle count
-  useEffect(() => {
-    if (running && cycleCount > 0 && cycleCount >= targetCycles) {
+  // Auto-stop once the session hits the target cycle count
+useEffect(() => {
+    if (
+      running &&
+      cycleCount > 0 &&
+      cycleCount >= targetCycles
+    ) {
+      fetch("/api/exercises/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "breathing",
+          payload: {
+            pattern: PATTERNS[patternIndex].label,
+            targetCycles,
+            cycleCount,
+            sessionSeconds: sessionMs / 1000,
+          },
+        }),
+      });
+
       setRunning(false);
       clearTick();
       setPhase("idle");
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycleCount, targetCycles]);
 
@@ -289,11 +308,26 @@ export default function BreathingExercise({
   };
 
   const handleStop = () => {
-    setRunning(false);
-    clearTick();
-    setPhase("idle");
-  };
+  setRunning(false);
+  clearTick();
+  setPhase("idle");
 
+  if (cycleCount > 0) {
+    fetch("/api/exercises/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "breathing",
+        payload: {
+          pattern: PATTERNS[patternIndex].label,
+          targetCycles,
+          cycleCount,
+          sessionSeconds: sessionMs / 1000,
+        },
+      }),
+    });
+  }
+};
   const handlePatternChange = (idx: number) => {
     handleStop();
     setPatternIndex(idx);
@@ -304,8 +338,12 @@ export default function BreathingExercise({
 
   const adjustTargetCycles = (delta: number) => {
     if (running) return;
+
     setTargetCycles((c) =>
-      Math.min(MAX_CYCLES, Math.max(MIN_CYCLES, c + delta))
+      Math.min(
+        MAX_CYCLES,
+        Math.max(MIN_CYCLES, c + delta)
+      )
     );
   };
 
@@ -363,25 +401,35 @@ export default function BreathingExercise({
     RING_C * (1 - pct / 100);
 
   const activeSteps = PHASE_STEPS.filter(
-    (step) => pattern[PHASE_STEPS.findIndex((s) => s.key === step.key)] > 0
+    (step) =>
+      pattern[
+        PHASE_STEPS.findIndex(
+          (s) => s.key === step.key
+        )
+      ] > 0
   );
 
-  return (
-    // Single container — this fills the one bg-background card that
-    // Exercises.tsx already renders around active exercises. No nested
-    // panels, no duplicate backgrounds. Padding is symmetric top/bottom
-    // (py-7 sm:py-8 applies equally to both).
-    <div className="relative w-full flex flex-col items-center gap-4 sm:gap-5 px-6 py-7 sm:px-10 sm:py-8">
+  // Simple 5-5 contains only Inhale and Exhale.
+  // These two cards are centered and slightly wider.
+  const hasTwoSteps = activeSteps.length === 2;
 
-      {/* theme-consistent decorative accents — all absolute, add zero height */}
+  // 4-7-8 contains three steps.
+  // These three cards are centered like the Simple 5-5 cards.
+  const hasThreeSteps = activeSteps.length === 3;
+
+  return (
+    <div className="relative w-full flex flex-col items-center gap-3 sm:gap-4 px-6 py-4 sm:px-10 sm:py-5">
+
+      {/* Theme-consistent decorative accents */}
       <div className="pointer-events-none absolute -top-12 -left-12 w-40 h-40 rounded-full bg-greensoft/50 blur-2xl" />
       <div className="pointer-events-none absolute -bottom-16 -right-12 w-48 h-48 rounded-full bg-peachsoft/40 blur-2xl" />
       <div className="pointer-events-none absolute top-1/3 -right-8 w-28 h-28 rounded-full bg-lavendersoft/40 blur-2xl" />
+
       <Sparkles className="pointer-events-none absolute top-5 right-6 w-4 h-4 text-green/40" />
       <Sparkles className="pointer-events-none absolute bottom-6 left-6 w-3 h-3 text-lavender/40" />
 
-      {/* HEADER — font-heading now matches the "Exercises" title */}
-      <div className="relative flex items-start justify-between w-full max-w-md">
+      {/* HEADER */}
+      <div className="relative flex items-start justify-between w-full">
         <div>
           <h2 className="font-heading text-heading text-3xl md:text-4xl flex items-center gap-2">
             Breathing
@@ -527,7 +575,7 @@ export default function BreathingExercise({
         )}
       </div>
 
-      {/* BREATHING ORB — slightly smaller so everything fits without a scrollbar */}
+      {/* BREATHING ORB */}
       <div className="relative w-52 h-52 sm:w-56 sm:h-56 md:w-60 md:h-60 flex items-center justify-center">
 
         <div className="absolute -top-3 -left-5 w-24 h-24 rounded-full bg-greensoft/50 blur-md" />
@@ -578,8 +626,9 @@ export default function BreathingExercise({
           }}
         />
 
+        {/* BREATHING CORE */}
         <div
-          className={`absolute blob-shape flex flex-col items-center justify-center gap-0.5 shadow-lg transition-colors duration-700 ${tone.core}`}
+          className={`absolute blob-shape flex flex-col items-center justify-center gap-1 shadow-lg transition-colors duration-700 ${tone.core}`}
           style={{
             width: `${scale * 88}px`,
             height: `${scale * 88}px`,
@@ -591,12 +640,12 @@ export default function BreathingExercise({
               "ease-in-out",
           }}
         >
-          <span className="font-body font-semibold text-background text-lg tracking-wide">
+          <span className="font-body font-semibold text-background text-sm sm:text-base tracking-wide whitespace-nowrap leading-none">
             {phaseLabel(phase)}
           </span>
 
           {remaining !== null && (
-            <span className="font-body text-background/80 text-xs">
+            <span className="font-body text-background/80 text-[10px] sm:text-xs leading-none mt-1">
               {remaining}s
             </span>
           )}
@@ -613,8 +662,13 @@ export default function BreathingExercise({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => adjustTargetCycles(-1)}
-              disabled={running || targetCycles <= MIN_CYCLES}
+              onClick={() =>
+                adjustTargetCycles(-1)
+              }
+              disabled={
+                running ||
+                targetCycles <= MIN_CYCLES
+              }
               aria-label="Fewer cycles"
               className="w-6 h-6 rounded-full bg-greensoft/70 text-heading font-semibold flex items-center justify-center leading-none disabled:opacity-30 hover:bg-greensoft transition-colors"
             >
@@ -622,13 +676,20 @@ export default function BreathingExercise({
             </button>
 
             <span className="font-body font-bold text-heading text-xl tabular-nums min-w-[2.5ch] text-center">
-              {running ? `${cycleCount}/${targetCycles}` : targetCycles}
+              {running
+                ? `${cycleCount}/${targetCycles}`
+                : targetCycles}
             </span>
 
             <button
               type="button"
-              onClick={() => adjustTargetCycles(1)}
-              disabled={running || targetCycles >= MAX_CYCLES}
+              onClick={() =>
+                adjustTargetCycles(1)
+              }
+              disabled={
+                running ||
+                targetCycles >= MAX_CYCLES
+              }
               aria-label="More cycles"
               className="w-6 h-6 rounded-full bg-greensoft/70 text-heading font-semibold flex items-center justify-center leading-none disabled:opacity-30 hover:bg-greensoft transition-colors"
             >
@@ -651,7 +712,7 @@ export default function BreathingExercise({
         </div>
       </div>
 
-      {/* CONTROLS — Stop now shares the exact same pill style as Start */}
+      {/* CONTROLS */}
       <div className="flex gap-4">
         <button
           onClick={handleStart}
@@ -671,13 +732,30 @@ export default function BreathingExercise({
       </div>
 
       {/* PROCESS / PHASE STEP CARDS */}
-      <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div
+        className={`w-full grid gap-3 ${
+          hasTwoSteps
+            ? "grid-cols-2 max-w-lg mx-auto"
+            : hasThreeSteps
+              ? "grid-cols-3 max-w-2xl mx-auto"
+              : "grid-cols-2 sm:grid-cols-4"
+        }`}
+      >
         {activeSteps.map((step) => {
-          const isActive = running && phase === step.key;
-          const stepTone = PHASE_TONE[step.key];
+          const isActive =
+            running && phase === step.key;
+
+          const stepTone =
+            PHASE_TONE[step.key];
+
           const Icon = step.icon;
+
           const seconds =
-            pattern[PHASE_STEPS.findIndex((s) => s.key === step.key)];
+            pattern[
+              PHASE_STEPS.findIndex(
+                (s) => s.key === step.key
+              )
+            ];
 
           return (
             <div
@@ -760,7 +838,6 @@ export default function BreathingExercise({
           }
         }
       `}</style>
-
     </div>
   );
 }

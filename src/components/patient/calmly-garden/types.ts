@@ -4,21 +4,20 @@ export type MovementState = {
   lean: number;
 
   squatTriggered: boolean;
-
   reachTriggered: boolean;
-
   jumpTriggered: boolean;
 
   squatHeld: boolean;
-
   reachHeld: boolean;
 };
 
 export const EMPTY_MOVEMENT: MovementState = {
   lean: 0,
+
   squatTriggered: false,
   reachTriggered: false,
   jumpTriggered: false,
+
   squatHeld: false,
   reachHeld: false,
 };
@@ -55,14 +54,24 @@ export type NormalizedPoint = {
 };
 
 /*
- * These are the only landmarks required.
+ * Pose landmarks used by the movement detector.
  *
- * NOTICE:
- * Knees are intentionally NOT included.
+ * We intentionally keep the pose lightweight.
  *
- * Ankles are included because the game detects
- * a jump by checking whether both feet rise
- * above the standing baseline.
+ * IMPORTANT:
+ * We do NOT use knees for squat detection.
+ *
+ * Squat is detected using:
+ *
+ *     HEAD + SHOULDERS
+ *
+ * moving downward from the standing baseline.
+ *
+ * Jump is detected using:
+ *
+ *     HEAD / NOSE
+ *
+ * moving upward from the standing baseline.
  */
 export type PoseSample = {
   nose: NormalizedPoint;

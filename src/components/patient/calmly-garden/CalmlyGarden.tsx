@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Leaf } from "lucide-react";
 
 import { useCamera } from "./useCamera";
 import { usePoseLandmarker } from "./usePoseLandmarker";
@@ -11,7 +10,6 @@ import CameraPermission from "./CameraPermission";
 import CameraSetup from "./CameraSetup";
 import CameraPreview from "./CameraPreview";
 import GardenGame from "./GardenGame";
-import GameUI from "./GameUI";
 import GardenSummary from "./GardenSummary";
 
 import type {
@@ -55,12 +53,6 @@ export default function CalmlyGarden({
 
   const camera = useCamera();
 
-  /*
-   * Pose detection starts DURING the setup screen.
-   *
-   * This is important because we need to know whether
-   * the user is correctly positioned before starting.
-   */
   const posePipelineEnabled =
     mode === "camera" &&
     (screen === "setup" ||
@@ -91,14 +83,6 @@ export default function CalmlyGarden({
     }
   }, [screen, camera]);
 
-  /*
-   * Camera button:
-   *
-   * Camera opens first.
-   * We DO NOT start the game yet.
-   *
-   * Instead we go to the positioning screen.
-   */
   const handleStartCamera =
     useCallback(async () => {
       const ok =
@@ -115,11 +99,6 @@ export default function CalmlyGarden({
       setScreen("setup");
     }, [camera]);
 
-  /*
-   * CameraSetup calls this automatically
-   * after the user stays correctly positioned
-   * for one full second.
-   */
   const handlePositionReady =
     useCallback(() => {
       setLiveStats({
@@ -129,9 +108,6 @@ export default function CalmlyGarden({
       setScreen("playing");
     }, []);
 
-  /*
-   * Keyboard/demo fallback.
-   */
   const handleUseDemo =
     useCallback(() => {
       camera.stop();
@@ -152,14 +128,18 @@ export default function CalmlyGarden({
       );
     }, []);
 
-  const handleGameFinish =
-    useCallback(
-      (stats: GardenStats) => {
-        setFinalStats(stats);
-        setScreen("summary");
-      },
-      []
-    );
+  const handleGameFinish = useCallback(async (stats: GardenStats) => {
+  setFinalStats(stats);
+  setScreen("summary");
+  await fetch("/api/exercises/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "garden",
+      payload: { mode, targetSeconds: TARGET_SESSION_SECONDS, ...stats },
+    }),
+  });
+}, [mode]);
 
   const handlePlayAgain =
     useCallback(() => {
@@ -175,24 +155,7 @@ export default function CalmlyGarden({
     }, [camera]);
 
   return (
-    <div className="flex flex-col gap-4">
-
-      {/* HEADER */}
-
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 font-body text-text/60 hover:text-text text-sm"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Exercises
-        </button>
-
-        <div className="flex items-center gap-1.5 font-body text-text/60 text-sm">
-          Calmly Garden
-          <Leaf className="h-4 w-4 text-green" />
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
 
       {/* INTRO */}
 
@@ -203,6 +166,7 @@ export default function CalmlyGarden({
           videoRef={camera.videoRef}
           onStartCamera={handleStartCamera}
           onUseDemo={handleUseDemo}
+          onBack={onBack}
         />
       )}
 
@@ -218,6 +182,7 @@ export default function CalmlyGarden({
             modelError={modelError}
             onReady={handlePositionReady}
             onUseDemo={handleUseDemo}
+            onBack={onBack}
           />
         )}
 
@@ -226,18 +191,7 @@ export default function CalmlyGarden({
       {screen === "playing" && (
         <div className="flex flex-col gap-3">
 
-          <GameUI
-            stats={liveStats}
-            mode={mode}
-            targetSeconds={
-              TARGET_SESSION_SECONDS
-            }
-            onFinish={handleFinishNow}
-          />
-
           <div className="relative">
-
-            {/* Same camera stream — NO second camera request */}
 
             {mode === "camera" && (
               <CameraPreview
@@ -254,6 +208,7 @@ export default function CalmlyGarden({
               finishSignal={finishSignal}
               onStatsTick={setLiveStats}
               onFinish={handleGameFinish}
+              onBack={handleFinishNow}
             />
 
             {mode === "camera" &&

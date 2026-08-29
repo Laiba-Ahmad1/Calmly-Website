@@ -131,7 +131,7 @@ export default function JournalForm() {
               <textarea
                 value={reflection}
                 onChange={(e) => setReflection(e.target.value)}
-                placeholder="What's on your mind today?"
+                placeholder="What did you notice about your anxiety today?"
                 rows={10}
                 className="h-56 w-full resize-none rounded-2xl border border-green/30 bg-green/10 p-4 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
               />

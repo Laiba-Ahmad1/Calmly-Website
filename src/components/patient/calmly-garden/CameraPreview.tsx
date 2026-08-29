@@ -43,7 +43,7 @@ export default function CameraPreview({
   ]);
 
   return (
-    <div className="absolute top-4 right-4 z-50 w-40 overflow-hidden rounded-xl border-2 border-white/80 bg-black shadow-lg">
+    <div className="absolute top-4 right-4 z-50 w-32 overflow-hidden rounded-2xl border-[3px] border-white/90 bg-black shadow-lg sm:w-40">
 
       <video
         ref={videoRef}
@@ -53,7 +53,7 @@ export default function CameraPreview({
         className="block w-full -scale-x-100"
       />
 
-      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+      <div className="absolute bottom-0 left-0 right-0 bg-black/45 px-2 py-1 backdrop-blur-sm">
         <p className="text-center text-[10px] text-white">
           Camera
         </p>

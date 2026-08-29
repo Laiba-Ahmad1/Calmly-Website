@@ -27,9 +27,9 @@ export async function generatePersonalizedQuestion({
 }: GenerateParams) {
   const [recentJournal, priorGenerated] = await Promise.all([
     Journal.find({ patientId: userId })
-  .sort({ createdAt: -1 })
-  .limit(5)
-  .select("feelings reflection mood sleepQuality createdAt"),
+      .sort({ date: -1 })
+      .limit(5)
+      .select("feelings reflection mood sleepQuality date"),
     QuizQuestion.find({ generatedForUserId: userId, dimension })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -37,16 +37,16 @@ export async function generatePersonalizedQuestion({
   ]);
 
   const journalContext = recentJournal.length
-  ? recentJournal
-      .map(
-        (e: any) =>
-          `- Mood: ${e.mood}/5
+    ? recentJournal
+        .map(
+          (e: any) =>
+            `- Mood: ${e.mood}/5
   Sleep: ${e.sleepQuality}/5
   Feelings: ${e.feelings}
   Reflection: ${e.reflection}`
-      )
-      .join("\n")
-  : "(no recent journal entries)";
+        )
+        .join("\n")
+    : "(no recent journal entries)";
 
   const avoidRepeats = priorGenerated.length
     ? priorGenerated.map((q) => `- ${q.question}`).join("\n")

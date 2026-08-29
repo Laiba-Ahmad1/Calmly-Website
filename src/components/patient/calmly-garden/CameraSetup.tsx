@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   CircleAlert,
   Loader2,
+  Leaf,
 } from "lucide-react";
 
 import type { PoseSample } from "./types";
@@ -64,6 +65,7 @@ export default function CameraSetup({
   modelError,
   onReady,
   onUseDemo,
+  onBack,
 }: {
   videoRef: RefObject<HTMLVideoElement>;
   streamRef: RefObject<MediaStream | null>;
@@ -72,6 +74,7 @@ export default function CameraSetup({
   modelError: string | null;
   onReady: () => void;
   onUseDemo: () => void;
+  onBack?: () => void;
 }) {
   const [readyFor, setReadyFor] = useState(0);
 
@@ -157,13 +160,39 @@ export default function CameraSetup({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <h3 className="font-body font-bold text-text text-xl">
+    <div className="relative flex flex-col items-center gap-3 py-3 px-4 sm:px-8 overflow-hidden">
+
+      {/* Decorative accents, consistent with the other screens */}
+      <div className="pointer-events-none absolute -top-12 -left-12 w-40 h-40 rounded-full bg-greensoft/50 blur-2xl" />
+      <div className="pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full bg-greensoft/50 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-12 w-48 h-48 rounded-full bg-lavendersoft/30 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-16 -right-12 w-48 h-48 rounded-full bg-greensoft/40 blur-2xl" />
+
+      {/* HEADER — title/subtitle top-left, Back top-right */}
+      <div className="relative flex items-start justify-between w-full max-w-3xl mt-1 mb-0.5">
+        <div>
+          <h2 className="font-heading text-heading text-2xl md:text-3xl flex items-center gap-2">
+            Camera Preview
+            <Leaf className="w-5 h-5 text-green" />
+          </h2>
+        </div>
+
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="font-body text-sm text-heading underline underline-offset-4 shrink-0 mt-1"
+          >
+            Back
+          </button>
+        )}
+      </div>
+
+      <div className="relative w-full max-w-lg">
+        <h3 className="font-body font-bold text-green text-xl">
           Get into position
         </h3>
 
-        <p className="font-body text-text/60 text-sm mt-1">
+        <p className="font-body text-text/60 text-xs mt-1 leading-snug">
           Stand where your head and both feet are visible.
           Once your position is correct, the game starts
           automatically.
@@ -172,24 +201,25 @@ export default function CameraSetup({
 
       <div
         className={[
-          "relative w-full overflow-hidden rounded-3xl border-4 bg-black shadow-sm transition-colors duration-200",
+          "relative mx-auto w-full max-w-xs overflow-hidden rounded-[24px] border-[3px] bg-black shadow-lg transition-colors duration-200",
           goodPosition &&
           modelStatus === "ready"
             ? "border-green"
             : "border-red-500",
         ].join(" ")}
+        style={{ filter: "drop-shadow(0 10px 20px rgba(140,163,126,0.25))" }}
       >
         <video
           ref={videoRef}
           autoPlay
           muted
           playsInline
-          className="block aspect-video w-full object-cover -scale-x-100"
+          className="block aspect-[3/4] w-full object-cover -scale-x-100"
         />
 
-        <div className="pointer-events-none absolute inset-5 rounded-2xl border border-white/30" />
+        <div className="pointer-events-none absolute inset-4 rounded-2xl border border-white/30" />
 
-        <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 backdrop-blur">
+        <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1.5 backdrop-blur">
           <div className="flex items-center gap-2 text-xs font-semibold text-white">
             {goodPosition &&
             modelStatus === "ready" ? (
@@ -213,8 +243,8 @@ export default function CameraSetup({
 
         {goodPosition &&
           modelStatus === "ready" && (
-            <div className="absolute bottom-5 left-1/2 w-[min(85%,420px)] -translate-x-1/2">
-              <div className="mb-2 text-center text-sm font-semibold text-white drop-shadow">
+            <div className="absolute bottom-3 left-1/2 w-[min(85%,420px)] -translate-x-1/2">
+              <div className="mb-1.5 text-center text-sm font-semibold text-white drop-shadow">
                 {readyFor < READY_DELAY_MS
                   ? "Starting in 1 second…"
                   : "Starting…"}
@@ -233,7 +263,7 @@ export default function CameraSetup({
       </div>
 
       {modelStatus === "error" && (
-        <div className="rounded-2xl bg-peach-soft px-4 py-3 text-center">
+        <div className="w-full max-w-sm rounded-2xl bg-peach-soft px-4 py-2.5 text-center">
           <p className="font-body text-sm text-text/70">
             {modelError ??
               "The movement model could not be loaded."}
@@ -244,7 +274,8 @@ export default function CameraSetup({
       {modelStatus === "error" && (
         <button
           onClick={onUseDemo}
-          className="mx-auto rounded-full bg-green px-5 py-2.5 font-body text-sm font-semibold text-background"
+          className="bg-button-shape bg-contain bg-no-repeat bg-center font-body font-semibold text-sm text-background w-52 py-3 flex items-center justify-center gap-2 transition-all hover:brightness-105"
+          style={{ filter: "drop-shadow(0 6px 10px rgba(140,163,126,0.35))" }}
         >
           Continue with Demo Mode
         </button>

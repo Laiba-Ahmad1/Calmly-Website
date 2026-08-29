@@ -40,17 +40,13 @@ export function usePoseLandmarker(
   enabled: boolean
 ) {
   const [status, setStatus] =
-    useState<LandmarkerStatus>(
-      "idle"
-    );
+    useState<LandmarkerStatus>("idle");
 
   const [error, setError] =
     useState<string | null>(null);
 
   const [pose, setPose] =
-    useState<PoseSample | null>(
-      null
-    );
+    useState<PoseSample | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const landmarkerRef =
@@ -96,9 +92,16 @@ export function usePoseLandmarker(
                 modelAssetPath:
                   "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
 
+                /*
+                 * GPU keeps the pose processing responsive.
+                 */
                 delegate: "GPU",
               },
 
+              /*
+               * VIDEO mode is appropriate because the camera
+               * continuously supplies frames.
+               */
               runningMode: "VIDEO",
 
               numPoses: 1,
@@ -130,7 +133,9 @@ export function usePoseLandmarker(
     }
 
     function loop() {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
 
       const video =
         videoRef.current;
@@ -149,6 +154,9 @@ export function usePoseLandmarker(
         return;
       }
 
+      /*
+       * Only process a new video frame.
+       */
       if (
         video.currentTime !==
         lastVideoTimeRef.current
@@ -167,11 +175,12 @@ export function usePoseLandmarker(
             result?.landmarks?.[0];
 
           if (landmarks) {
-            setPose(
+            const sample =
               toPoseSample(
                 landmarks
-              )
-            );
+              );
+
+            setPose(sample);
           } else {
             setPose(null);
           }
@@ -222,6 +231,10 @@ export function usePoseLandmarker(
   };
 }
 
+// ============================================================
+// POINT
+// ============================================================
+
 function toPoint(
   landmark: {
     x: number;
@@ -236,6 +249,10 @@ function toPoint(
       landmark.visibility,
   };
 }
+
+// ============================================================
+// POSE SAMPLE
+// ============================================================
 
 function toPoseSample(
   landmarks: {
@@ -262,7 +279,8 @@ function toPoseSample(
 
   if (
     required.some(
-      (index) => !landmarks[index]
+      (index) =>
+        !landmarks[index]
     )
   ) {
     return null;

@@ -16,6 +16,8 @@ module.exports = {
         lavendersoft: "rgb(var(--color-lavendersoft) / <alpha-value>)",
         peach: "rgb(var(--color-peach) / <alpha-value>)",
         peachsoft: "rgb(var(--color-peachsoft) / <alpha-value>)",
+        blue: "rgb(var(--color-blue) / <alpha-value>)",
+        bluesoft: "rgb(var(--color-bluesoft) / <alpha-value>)",
 
         button: "var(--button-clr)",
       },

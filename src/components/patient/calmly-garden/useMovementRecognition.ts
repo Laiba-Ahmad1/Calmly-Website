@@ -1,112 +1,170 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+
 import type {
   InputMode,
   MovementState,
   PoseSample,
 } from "./types";
+
 import { EMPTY_MOVEMENT } from "./types";
 
-/*
- * ============================================================
- * CALMLY - MOVEMENT RECOGNITION
- * ============================================================
- *
- * HANDS:
- *   Hand-above-shoulder detection remains sensitive.
- *
- * LEFT / RIGHT:
- *   Uses hip-center movement.
- *
- * JUMP:
- *   VERY therapy-friendly.
- *
- *   A jump can be detected from:
- *     1. Hip moving upward
- *     2. Body moving upward
- *     3. One/both feet moving upward
- *     4. A noticeable change from the standing baseline
- *
- *   Feet are NOT required to be perfectly visible.
- *
- *   IMPORTANT:
- *   Recognition is intentionally easy.
- *   Game scoring is handled separately by GardenGame.
- *
- * SQUAT:
- *   Uses downward hip movement while the feet stay planted.
- */
+// ============================================================
+// CALMLY - MOVEMENT RECOGNITION
+// ============================================================
+//
+// CAMERA MOVEMENTS:
+//
+// LEFT / RIGHT
+//     Hip-center horizontal movement.
+//
+// JUMP
+//     ONLY the head/nose moving upward from the
+//     standing baseline.
+//
+// SQUAT
+//     Head + shoulders moving clearly downward
+//     from the standing baseline.
+//
+// REACH
+//     Either hand above its shoulder.
+//
+// IMPORTANT:
+//
+// Movement recognition DOES NOT increase score.
+//
+// GardenGame is responsible for collectible collision
+// and scoring.
+// ============================================================
+
 
 // ============================================================
 // LEFT / RIGHT
 // ============================================================
 
+/*
+ * Small deadzone prevents tiny camera/body noise.
+ */
 const LEFT_RIGHT_DEADZONE = 0.035;
+
+/*
+ * How far the player can lean before reaching ±1.
+ */
 const LEFT_RIGHT_RANGE = 0.22;
-const LEFT_RIGHT_SMOOTHING = 0.18;
+
+/*
+ * IMPORTANT:
+ *
+ * Previously this was 0.18.
+ *
+ * 0.75 makes the game react much faster.
+ */
+const LEFT_RIGHT_SMOOTHING = 0.75;
+
 
 // ============================================================
 // JUMP
 // ============================================================
 
 /*
- * Prevents one jump from creating many jump events.
+ * Prevents one jump from repeatedly firing.
  */
-const JUMP_COOLDOWN = 550;
+const JUMP_COOLDOWN = 650;
 
 /*
- * After a jump has been detected, the patient must return
- * approximately to standing before another jump can happen.
+ * After a jump, the head must return close enough
+ * to its standing position before another jump
+ * can happen.
  */
-const JUMP_RELEASE = 0.012;
+const JUMP_RELEASE = 0.035;
 
 /*
- * VERY SMALL movement can trigger a jump.
+ * How far upward the head must move.
  *
- * These values are normalized against body size.
+ * Camera coordinates:
+ *
+ *     smaller Y = higher on screen
+ *
+ * Therefore:
+ *
+ *     baseline.noseY - current.noseY
+ *
+ * means upward movement.
+ *
+ * 0.055 means approximately 5.5% of body height.
+ *
+ * This is intentionally easy, but NOT tiny.
  */
-const JUMP_HIP_RISE = 0.012;
-const JUMP_BODY_RISE = 0.009;
-const JUMP_FOOT_RISE = 0.010;
+const JUMP_HEAD_RISE = 0.055;
 
 /*
- * Frame-to-frame upward movement.
+ * Require a small amount of frame confirmation.
  *
- * This is deliberately tiny.
+ * 2 is enough to reduce accidental one-frame jumps
+ * while still feeling responsive.
  */
-const JUMP_UPWARD_SPEED = 0.0012;
+const JUMP_CONFIRM_FRAMES = 2;
 
-/*
- * Only one frame is needed.
- *
- * This is intentional for therapy patients.
- */
-const JUMP_CONFIRM_FRAMES = 1;
 
 // ============================================================
 // SQUAT
 // ============================================================
 
+/*
+ * Prevent repeated squat events.
+ */
 const SQUAT_COOLDOWN = 650;
 
-const SQUAT_DEPTH = 0.045;
+/*
+ * How far the upper body must move downward.
+ *
+ * This is deliberately noticeable.
+ *
+ * We don't want:
+ *
+ *     tiny head movement = squat
+ *
+ * We want:
+ *
+ *     clearly lower yourself = squat
+ */
+const SQUAT_DEPTH = 0.075;
 
-const SQUAT_RELEASE = 0.022;
+/*
+ * When the upper body comes back close to standing,
+ * another squat can be detected.
+ */
+const SQUAT_RELEASE = 0.035;
 
+/*
+ * Require several frames so a single noisy pose
+ * does not trigger squat.
+ */
 const SQUAT_CONFIRM_FRAMES = 3;
+
 
 // ============================================================
 // HANDS
 // ============================================================
 
+/*
+ * Hand detection was already working well,
+ * so keep it responsive.
+ */
 const REACH_COOLDOWN = 500;
+
 
 // ============================================================
 // CALIBRATION
 // ============================================================
 
-const CALIBRATION_FRAMES = 12;
+/*
+ * The first few valid frames establish the patient's
+ * normal standing position.
+ */
+const CALIBRATION_FRAMES = 20;
+
 
 // ============================================================
 // DEMO KEYS
@@ -120,25 +178,46 @@ type DemoKeys = {
   reach: boolean;
 };
 
+
 // ============================================================
 // BASELINE
 // ============================================================
 
 type Baseline = {
-  hipY: number;
+  /*
+   * Head/nose standing position.
+   */
+  noseY: number;
 
+  /*
+   * Average shoulder position.
+   */
   shoulderY: number;
 
-  leftAnkleY: number;
+  /*
+   * Combined upper-body position.
+   *
+   * This is calculated from:
+   *
+   *     head + shoulders
+   *
+   * and is used for squat detection.
+   */
+  upperBodyY: number;
 
-  rightAnkleY: number;
-
-  footY: number;
-
-  bodyHeight: number;
+  /*
+   * Hips are still used for left/right.
+   */
+  hipY: number;
 
   hipX: number;
+
+  /*
+   * Kept for body normalization.
+   */
+  bodyHeight: number;
 };
+
 
 // ============================================================
 // HOOK
@@ -161,6 +240,7 @@ export function useMovementRecognition(
   poseRef.current =
     pose;
 
+
   // ==========================================================
   // KEYBOARD
   // ==========================================================
@@ -174,12 +254,15 @@ export function useMovementRecognition(
       reach: false,
     });
 
+
   // ==========================================================
   // DEMO MODE KEYBOARD
   // ==========================================================
 
   useEffect(() => {
-    if (mode !== "demo") {
+    if (
+      mode !== "demo"
+    ) {
       return;
     }
 
@@ -187,6 +270,10 @@ export function useMovementRecognition(
       e: KeyboardEvent
     ) {
       switch (e.key) {
+        // ----------------------------------------------------
+        // LEFT
+        // ----------------------------------------------------
+
         case "ArrowLeft":
         case "a":
         case "A":
@@ -194,12 +281,20 @@ export function useMovementRecognition(
             true;
           break;
 
+        // ----------------------------------------------------
+        // RIGHT
+        // ----------------------------------------------------
+
         case "ArrowRight":
         case "d":
         case "D":
           keys.current.right =
             true;
           break;
+
+        // ----------------------------------------------------
+        // JUMP
+        // ----------------------------------------------------
 
         case " ":
         case "Spacebar":
@@ -211,6 +306,10 @@ export function useMovementRecognition(
           e.preventDefault();
           break;
 
+        // ----------------------------------------------------
+        // SQUAT
+        // ----------------------------------------------------
+
         case "s":
         case "S":
           keys.current.squat =
@@ -218,6 +317,10 @@ export function useMovementRecognition(
 
           e.preventDefault();
           break;
+
+        // ----------------------------------------------------
+        // REACH
+        // ----------------------------------------------------
 
         case "w":
         case "W":
@@ -228,6 +331,7 @@ export function useMovementRecognition(
           break;
       }
     }
+
 
     function keyUp(
       e: KeyboardEvent
@@ -261,6 +365,7 @@ export function useMovementRecognition(
       }
     }
 
+
     window.addEventListener(
       "keydown",
       keyDown
@@ -270,6 +375,7 @@ export function useMovementRecognition(
       "keyup",
       keyUp
     );
+
 
     return () => {
       window.removeEventListener(
@@ -284,6 +390,7 @@ export function useMovementRecognition(
     };
   }, [mode]);
 
+
   // ==========================================================
   // CAMERA RECOGNITION
   // ==========================================================
@@ -291,60 +398,72 @@ export function useMovementRecognition(
   useEffect(() => {
     let animationFrame = 0;
 
+
     // ========================================================
-    // CALIBRATION
+    // BASELINE
     // ========================================================
 
     let baseline:
       | Baseline
       | null = null;
 
-    let calibrationCount = 0;
+    let calibrationCount =
+      0;
+
 
     // ========================================================
     // PREVIOUS POSITIONS
     // ========================================================
 
-    let previousHipY:
+    let previousNoseY:
       number | null = null;
 
-    let previousFootY:
+    let previousHipX:
       number | null = null;
 
-    let previousShoulderY:
-      number | null = null;
 
     // ========================================================
-    // HORIZONTAL SMOOTHING
+    // HORIZONTAL MOVEMENT
     // ========================================================
 
     let horizontalLean = 0;
+
 
     // ========================================================
     // JUMP STATE
     // ========================================================
 
-    let jumpActive = false;
+    let jumpActive =
+      false;
 
-    let jumpUpFrames = 0;
+    let jumpUpFrames =
+      0;
 
-    let lastJump = -Infinity;
+    let lastJump =
+      -Infinity;
+
 
     // ========================================================
     // SQUAT STATE
     // ========================================================
 
-    let squatActive = false;
+    let squatActive =
+      false;
 
-    let squatDownFrames = 0;
+    let squatDownFrames =
+      0;
 
-    let lastSquat = -Infinity;
+    let lastSquat =
+      -Infinity;
+
 
     // ========================================================
     // REACH STATE
     // ========================================================
 
-    let lastReach = -Infinity;
+    let lastReach =
+      -Infinity;
+
 
     // ========================================================
     // MAIN LOOP
@@ -357,6 +476,7 @@ export function useMovementRecognition(
         ...EMPTY_MOVEMENT,
       };
 
+
       // ======================================================
       // DEMO MODE
       // ======================================================
@@ -367,9 +487,11 @@ export function useMovementRecognition(
         const k =
           keys.current;
 
+
         next.lean =
           (k.right ? 1 : 0) -
           (k.left ? 1 : 0);
+
 
         next.squatHeld =
           k.squat;
@@ -377,21 +499,28 @@ export function useMovementRecognition(
         next.squatTriggered =
           k.squat;
 
+
         next.reachHeld =
           k.reach;
 
         next.reachTriggered =
           k.reach;
 
-        if (k.space) {
+
+        if (
+          k.space
+        ) {
           next.jumpTriggered =
             true;
 
           /*
-           * One keyboard press = one jump.
+           * One keyboard press =
+           * one jump.
            */
-          k.space = false;
+          k.space =
+            false;
         }
+
 
         movementRef.current =
           next;
@@ -404,6 +533,7 @@ export function useMovementRecognition(
         return;
       }
 
+
       // ======================================================
       // CAMERA MODE
       // ======================================================
@@ -411,8 +541,10 @@ export function useMovementRecognition(
       const sample =
         poseRef.current;
 
+
       /*
-       * If no person is detected, don't generate movement.
+       * Don't create movement when there is no reliable
+       * upper-body pose.
        */
       if (
         !sample ||
@@ -431,6 +563,7 @@ export function useMovementRecognition(
         return;
       }
 
+
       // ======================================================
       // LANDMARKS
       // ======================================================
@@ -441,11 +574,13 @@ export function useMovementRecognition(
           sample.rightHip.x
         );
 
+
       const hipY =
         average(
           sample.leftHip.y,
           sample.rightHip.y
         );
+
 
       const shoulderY =
         average(
@@ -453,17 +588,48 @@ export function useMovementRecognition(
           sample.rightShoulder.y
         );
 
+
+      const noseY =
+        sample.nose.y;
+
+
       const leftAnkleY =
         sample.leftAnkle.y;
 
+
       const rightAnkleY =
         sample.rightAnkle.y;
+
 
       const footY =
         average(
           leftAnkleY,
           rightAnkleY
         );
+
+
+      // ======================================================
+      // UPPER BODY POSITION
+      // ======================================================
+
+      /*
+       * This is the important part for squat.
+       *
+       * We combine:
+       *
+       *     HEAD
+       *     LEFT SHOULDER
+       *     RIGHT SHOULDER
+       *
+       * So the squat detector doesn't depend on the
+       * patient's hips being visible.
+       */
+      const upperBodyY =
+        (
+          noseY +
+          shoulderY
+        ) / 2;
+
 
       // ======================================================
       // BODY HEIGHT
@@ -476,94 +642,97 @@ export function useMovementRecognition(
           Math.abs(
             footY -
               average(
-                sample.nose.y,
+                noseY,
                 hipY
               )
           )
         );
 
+
       // ======================================================
       // CALIBRATION
       // ======================================================
 
-      if (!baseline) {
+      if (
+        !baseline
+      ) {
         baseline = {
-          hipY,
+          noseY,
 
           shoulderY,
 
-          leftAnkleY,
+          upperBodyY,
 
-          rightAnkleY,
-
-          footY,
-
-          bodyHeight,
+          hipY,
 
           hipX,
+
+          bodyHeight,
         };
 
         calibrationCount =
           1;
-      } else if (
+      }
+
+      else if (
         calibrationCount <
         CALIBRATION_FRAMES
       ) {
         /*
          * Slowly build a stable standing baseline.
          */
-        baseline.hipY =
+        baseline.noseY =
           lerp(
-            baseline.hipY,
-            hipY,
-            0.18
+            baseline.noseY,
+            noseY,
+            0.15
           );
+
 
         baseline.shoulderY =
           lerp(
             baseline.shoulderY,
             shoulderY,
-            0.18
+            0.15
           );
 
-        baseline.leftAnkleY =
+
+        baseline.upperBodyY =
           lerp(
-            baseline.leftAnkleY,
-            leftAnkleY,
-            0.18
+            baseline.upperBodyY,
+            upperBodyY,
+            0.15
           );
 
-        baseline.rightAnkleY =
+
+        baseline.hipY =
           lerp(
-            baseline.rightAnkleY,
-            rightAnkleY,
-            0.18
+            baseline.hipY,
+            hipY,
+            0.15
           );
 
-        baseline.footY =
-          lerp(
-            baseline.footY,
-            footY,
-            0.18
-          );
-
-        baseline.bodyHeight =
-          lerp(
-            baseline.bodyHeight,
-            bodyHeight,
-            0.18
-          );
 
         baseline.hipX =
           lerp(
             baseline.hipX,
             hipX,
-            0.18
+            0.15
           );
+
+
+        baseline.bodyHeight =
+          lerp(
+            baseline.bodyHeight,
+            bodyHeight,
+            0.15
+          );
+
 
         calibrationCount +=
           1;
       }
+
 
       // ======================================================
       // NORMALIZED SCALE
@@ -575,6 +744,7 @@ export function useMovementRecognition(
           baseline.bodyHeight
         );
 
+
       // ======================================================
       // LEFT / RIGHT
       // ======================================================
@@ -583,9 +753,11 @@ export function useMovementRecognition(
         hipX -
         baseline.hipX;
 
+
       const normalizedX =
         centeredX /
         LEFT_RIGHT_RANGE;
+
 
       const targetLean =
         clamp(
@@ -600,6 +772,10 @@ export function useMovementRecognition(
           1
         );
 
+
+      /*
+       * Much faster than before.
+       */
       horizontalLean =
         lerp(
           horizontalLean,
@@ -607,203 +783,79 @@ export function useMovementRecognition(
           LEFT_RIGHT_SMOOTHING
         );
 
+
       next.lean =
         horizontalLean;
+
 
       // ======================================================
       // JUMP DETECTION
       // ======================================================
 
       /*
-       * CAMERA COORDINATES:
+       * IMPORTANT:
        *
-       * Smaller Y = higher on screen.
+       * We ONLY look at the head/nose.
        *
-       * Therefore:
+       * No:
        *
-       * baselineY - currentY
+       *     hip jump
+       *     shoulder jump
+       *     foot jump
+       *     ankle jump
+       *     combined jump
        *
-       * is upward movement.
+       * can trigger a jump anymore.
+       *
+       * Smaller Y = higher on camera.
        */
+      const headRise =
+        baseline.noseY -
+        noseY;
 
-      const hipRise =
-        baseline.hipY -
-        hipY;
 
-      const shoulderRise =
-        baseline.shoulderY -
-        shoulderY;
+      const normalizedHeadRise =
+        headRise /
+        scale;
 
-      const footRise =
-        baseline.footY -
-        footY;
-
-      const leftFootRise =
-        baseline.leftAnkleY -
-        leftAnkleY;
-
-      const rightFootRise =
-        baseline.rightAnkleY -
-        rightAnkleY;
 
       // ======================================================
-      // NORMALIZED BODY MOVEMENT
+      // FRAME-TO-FRAME HEAD MOVEMENT
       // ======================================================
 
-      const normalizedHipRise =
-        hipRise /
-        scale;
-
-      const normalizedShoulderRise =
-        shoulderRise /
-        scale;
-
-      const normalizedFootRise =
-        footRise /
-        scale;
-
-      const normalizedLeftFootRise =
-        leftFootRise /
-        scale;
-
-      const normalizedRightFootRise =
-        rightFootRise /
-        scale;
-
-      // ======================================================
-      // FRAME-TO-FRAME MOVEMENT
-      // ======================================================
-
-      const hipMovingUp =
-        previousHipY !==
+      const headMovingUp =
+        previousNoseY !==
           null &&
-        previousHipY -
-          hipY >=
-          JUMP_UPWARD_SPEED;
+        previousNoseY -
+          noseY >
+          0.0015;
 
-      const shoulderMovingUp =
-        previousShoulderY !==
-          null &&
-        previousShoulderY -
-          shoulderY >=
-          JUMP_UPWARD_SPEED;
-
-      const feetMovingUp =
-        previousFootY !==
-          null &&
-        previousFootY -
-          footY >=
-          JUMP_UPWARD_SPEED;
 
       // ======================================================
-      // EASY JUMP CONDITIONS
+      // JUMP SIGNAL
       // ======================================================
 
-      /*
-       * CONDITION 1:
-       *
-       * Hips rise.
-       *
-       * This is now the MAIN jump detector.
-       *
-       * Feet are NOT required.
-       */
-      const hipJump =
-        normalizedHipRise >=
-        JUMP_HIP_RISE;
+      const headJumpSignal =
+        normalizedHeadRise >=
+          JUMP_HEAD_RISE &&
+        headMovingUp;
 
-      /*
-       * CONDITION 2:
-       *
-       * The upper body moves upward.
-       */
-      const bodyJump =
-        normalizedShoulderRise >=
-          JUMP_BODY_RISE &&
-        (
-          hipMovingUp ||
-          shoulderMovingUp
-        );
-
-      /*
-       * CONDITION 3:
-       *
-       * Feet move upward.
-       */
-      const footJump =
-        normalizedFootRise >=
-          JUMP_FOOT_RISE &&
-        feetMovingUp;
-
-      /*
-       * CONDITION 4:
-       *
-       * One foot rises noticeably.
-       *
-       * This helps when one ankle is tracked better than
-       * the other.
-       */
-      const oneFootJump =
-        (
-          normalizedLeftFootRise >=
-            JUMP_FOOT_RISE &&
-          leftFootRise >
-            0
-        )
-        ||
-        (
-          normalizedRightFootRise >=
-            JUMP_FOOT_RISE &&
-          rightFootRise >
-            0
-        );
-
-      /*
-       * CONDITION 5:
-       *
-       * A combination of small body + foot movement.
-       */
-      const combinedJump =
-        (
-          normalizedHipRise >=
-            JUMP_HIP_RISE * 0.65
-        ) &&
-        (
-          normalizedFootRise >=
-            JUMP_FOOT_RISE * 0.45
-        );
 
       // ======================================================
-      // FINAL EASY JUMP SIGNAL
+      // JUMP START
       // ======================================================
 
-      /*
-       * ANY ONE of these can start the jump.
-       *
-       * This is intentionally forgiving.
-       */
-      const easyJumpSignal =
-        hipJump ||
-        bodyJump ||
-        footJump ||
-        oneFootJump ||
-        combinedJump;
-
-      // ======================================================
-      // JUMP EVENT
-      // ======================================================
-
-      if (!jumpActive) {
+      if (
+        !jumpActive
+      ) {
         if (
-          easyJumpSignal
+          headJumpSignal
         ) {
           jumpUpFrames +=
             1;
         } else {
           /*
-           * Don't instantly forget the movement.
-           *
-           * This gives pose estimation a little tolerance.
+           * Slowly reduce confirmation.
            */
           jumpUpFrames =
             Math.max(
@@ -813,6 +865,7 @@ export function useMovementRecognition(
             );
         }
 
+
         if (
           jumpUpFrames >=
             JUMP_CONFIRM_FRAMES &&
@@ -821,21 +874,25 @@ export function useMovementRecognition(
             JUMP_COOLDOWN
         ) {
           /*
-           * THIS is what GardenGame receives.
+           * This is the ONLY camera jump event.
            */
           next.jumpTriggered =
             true;
 
+
           lastJump =
             now;
 
+
           jumpActive =
             true;
+
 
           jumpUpFrames =
             0;
         }
       }
+
 
       // ======================================================
       // JUMP RELEASE
@@ -843,64 +900,90 @@ export function useMovementRecognition(
 
       else {
         /*
-         * Once the body comes back close to the baseline,
-         * the next jump can be detected.
-         *
-         * This is deliberately more forgiving than the
-         * detection threshold.
+         * The head must return close to its standing
+         * position before another jump is allowed.
          */
-        const backToGround =
+        const returnedToStanding =
           Math.abs(
-            normalizedHipRise
+            normalizedHeadRise
           ) <=
           JUMP_RELEASE;
 
+
         if (
-          backToGround
+          returnedToStanding
         ) {
           jumpActive =
             false;
         }
       }
 
+
       // ======================================================
-      // SQUAT
+      // SQUAT DETECTION
       // ======================================================
 
-      const hipDrop =
-        hipY -
-        baseline.hipY;
+      /*
+       * Calculate how far the combined upper body moved
+       * DOWN from the standing baseline.
+       *
+       * Camera coordinates:
+       *
+       *     larger Y = lower on screen
+       */
+      const upperBodyDrop =
+        upperBodyY -
+        baseline.upperBodyY;
 
+
+      const normalizedUpperBodyDrop =
+        upperBodyDrop /
+        scale;
+
+
+      /*
+       * We also look at the shoulders.
+       *
+       * This makes sure that we're detecting an actual
+       * lowering of the upper body rather than only a
+       * tiny head movement.
+       */
       const shoulderDrop =
         shoulderY -
         baseline.shoulderY;
 
-      /*
-       * Feet should remain near the standing position.
-       */
-      const feetStill =
-        Math.abs(
-          footY -
-            baseline.footY
-        ) <
-        0.035;
 
-      /*
-       * Squat depth is normalized against body size.
-       */
-      const squatDepth =
-        hipDrop /
-          scale >=
-          SQUAT_DEPTH &&
+      const normalizedShoulderDrop =
         shoulderDrop /
-          scale >=
-          SQUAT_DEPTH *
-            0.35 &&
-        feetStill;
+        scale;
 
-      if (!squatActive) {
+
+      /*
+       * FINAL SQUAT CONDITION
+       *
+       * Both the upper body AND shoulders must move
+       * clearly downward.
+       *
+       * This makes squat much easier to perform than
+       * trying to detect hidden hips/knees.
+       */
+      const squatPosition =
+        normalizedUpperBodyDrop >=
+          SQUAT_DEPTH &&
+
+        normalizedShoulderDrop >=
+          SQUAT_DEPTH * 0.35;
+
+
+      // ======================================================
+      // SQUAT START
+      // ======================================================
+
+      if (
+        !squatActive
+      ) {
         if (
-          squatDepth
+          squatPosition
         ) {
           squatDownFrames +=
             1;
@@ -913,6 +996,7 @@ export function useMovementRecognition(
             );
         }
 
+
         if (
           squatDownFrames >=
             SQUAT_CONFIRM_FRAMES &&
@@ -923,44 +1007,69 @@ export function useMovementRecognition(
           next.squatTriggered =
             true;
 
+
           next.squatHeld =
             true;
+
 
           lastSquat =
             now;
 
+
           squatActive =
             true;
+
 
           squatDownFrames =
             0;
         }
-      } else {
+      }
+
+
+      // ======================================================
+      // SQUAT HOLD / RELEASE
+      // ======================================================
+
+      else {
+        /*
+         * Keep squatHeld true while the patient remains
+         * clearly down.
+         */
         next.squatHeld =
-          squatDepth;
+          squatPosition;
+
 
         /*
-         * Patient has returned upward.
+         * When the upper body comes back near standing,
+         * the squat is released.
          */
+        const returnedToStanding =
+          normalizedUpperBodyDrop <=
+          SQUAT_RELEASE;
+
+
         if (
-          hipDrop /
-            scale <=
-          SQUAT_RELEASE
+          returnedToStanding
         ) {
           squatActive =
             false;
+
+          squatDownFrames =
+            0;
         }
       }
+
 
       // ======================================================
       // HANDS ABOVE SHOULDERS
       // ======================================================
 
       /*
-       * This part stays sensitive because you said hand
-       * recognition is already good.
+       * KEEPING YOUR WORKING HAND DETECTION.
+       *
+       * Either hand above its corresponding shoulder
+       * counts.
        */
-
       const leftHandUp =
         (
           sample.leftWrist
@@ -968,8 +1077,10 @@ export function useMovementRecognition(
           0
         ) >=
           0.4 &&
+
         sample.leftWrist.y <
           sample.leftShoulder.y;
+
 
       const rightHandUp =
         (
@@ -978,14 +1089,18 @@ export function useMovementRecognition(
           0
         ) >=
           0.4 &&
+
         sample.rightWrist.y <
           sample.rightShoulder.y;
 
+
+      const handRaised =
+        leftHandUp ||
+        rightHandUp;
+
+
       if (
-        (
-          leftHandUp ||
-          rightHandUp
-        ) &&
+        handRaised &&
         now -
           lastReach >=
           REACH_COOLDOWN
@@ -993,38 +1108,42 @@ export function useMovementRecognition(
         next.reachTriggered =
           true;
 
+
         next.reachHeld =
           true;
+
 
         lastReach =
           now;
       } else {
         next.reachHeld =
-          leftHandUp ||
-          rightHandUp;
+          handRaised;
       }
+
 
       // ======================================================
       // PREVIOUS VALUES
       // ======================================================
 
-      previousHipY =
-        hipY;
+      previousNoseY =
+        noseY;
 
-      previousFootY =
-        footY;
+      previousHipX =
+        hipX;
 
-      previousShoulderY =
-        shoulderY;
 
       // ======================================================
       // BASELINE ADAPTATION
       // ======================================================
 
       /*
-       * Only adapt while the patient is relatively still.
+       * IMPORTANT:
        *
-       * This prevents the baseline from following the jump.
+       * We do NOT let the baseline follow the patient
+       * while they are jumping or squatting.
+       *
+       * Otherwise the detector could slowly decide that
+       * the new position is "normal".
        */
       if (
         !jumpActive &&
@@ -1032,48 +1151,54 @@ export function useMovementRecognition(
         calibrationCount >=
           CALIBRATION_FRAMES
       ) {
-        baseline.hipY =
+        baseline.noseY =
           lerp(
-            baseline.hipY,
-            hipY,
-            0.006
+            baseline.noseY,
+            noseY,
+            0.004
           );
+
 
         baseline.shoulderY =
           lerp(
             baseline.shoulderY,
             shoulderY,
-            0.006
-          );
-
-        baseline.footY =
-          lerp(
-            baseline.footY,
-            footY,
             0.004
           );
 
-        baseline.leftAnkleY =
+
+        baseline.upperBodyY =
           lerp(
-            baseline.leftAnkleY,
-            leftAnkleY,
+            baseline.upperBodyY,
+            upperBodyY,
             0.004
           );
 
-        baseline.rightAnkleY =
+
+        baseline.hipY =
           lerp(
-            baseline.rightAnkleY,
-            rightAnkleY,
+            baseline.hipY,
+            hipY,
             0.004
           );
+
+
+        baseline.hipX =
+          lerp(
+            baseline.hipX,
+            hipX,
+            0.004
+          );
+
 
         baseline.bodyHeight =
           lerp(
             baseline.bodyHeight,
             bodyHeight,
-            0.006
+            0.004
           );
       }
+
 
       // ======================================================
       // SAVE MOVEMENT
@@ -1082,16 +1207,19 @@ export function useMovementRecognition(
       movementRef.current =
         next;
 
+
       animationFrame =
         requestAnimationFrame(
           tick
         );
     }
 
+
     animationFrame =
       requestAnimationFrame(
         tick
       );
+
 
     return () => {
       cancelAnimationFrame(
@@ -1100,8 +1228,10 @@ export function useMovementRecognition(
     };
   }, [mode]);
 
+
   return movementRef;
 }
+
 
 // ============================================================
 // POSE RELIABILITY
@@ -1111,15 +1241,12 @@ function hasReliablePose(
   sample: PoseSample
 ) {
   /*
-   * IMPORTANT CHANGE:
+   * We primarily need the upper body.
    *
-   * We no longer require both ankles to have strong
-   * visibility.
-   *
-   * Feet can disappear briefly and the jump detector
-   * can still use hip/body movement.
+   * This is important because ankles may disappear
+   * when clothing or camera framing makes them hard
+   * to detect.
    */
-
   const upperBodyPoints = [
     sample.nose,
 
@@ -1129,6 +1256,7 @@ function hasReliablePose(
     sample.leftHip,
     sample.rightHip,
   ];
+
 
   const upperBodyVisible =
     upperBodyPoints.every(
@@ -1140,44 +1268,15 @@ function hasReliablePose(
         0.30
     );
 
-  /*
-   * At least ONE ankle should be somewhat visible.
-   *
-   * But ankles are no longer mandatory.
-   *
-   * This makes the camera much more forgiving.
-   */
-  const leftAnkleVisible =
-    (
-      sample.leftAnkle
-        .visibility ??
-      0
-    ) >=
-    0.15;
-
-  const rightAnkleVisible =
-    (
-      sample.rightAnkle
-        .visibility ??
-      0
-    ) >=
-    0.15;
-
-  const atLeastOneAnkle =
-    leftAnkleVisible ||
-    rightAnkleVisible;
 
   /*
-   * Upper body is enough for jump recognition.
+   * Ankles are optional.
    *
-   * This is especially important when the camera cannot
-   * clearly see the patient's feet.
+   * We do NOT require them for movement recognition.
    */
-  return (
-    upperBodyVisible ||
-    atLeastOneAnkle
-  );
+  return upperBodyVisible;
 }
+
 
 // ============================================================
 // HELPERS
@@ -1192,6 +1291,7 @@ function average(
   ) / 2;
 }
 
+
 function lerp(
   a: number,
   b: number,
@@ -1203,6 +1303,7 @@ function lerp(
       amount
   );
 }
+
 
 function clamp(
   value: number,

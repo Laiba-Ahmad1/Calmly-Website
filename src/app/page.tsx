@@ -1,8 +1,19 @@
 // Landing page — redirect to /login or /home depending on auth state
 import Button from "@/components/shared/Button";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  
+  const user = await getCurrentUser();
+  if (user?.role === "patient") {
+    redirect("/home");
+  } else if (user?.role === "therapist") {
+    redirect("/dashboard");
+  }
+
+
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-green p-6 sm:gap-10">
       <div

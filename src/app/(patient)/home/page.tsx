@@ -1,5 +1,3 @@
-
-
 // // src/app/(patient)/home/page.tsx
 // import Image from "next/image";
 // import Link from "next/link";
@@ -30,7 +28,7 @@
 
 //   // userName — adjust the field name below if your User schema calls it something else
 //   const userName = (user as any).name ?? "there";
-   
+
 //   // add near your other queries, after patientProfile is confirmed
 // const todaysJournal = await Journal.findOne({
 //   patientId: user._id,
@@ -220,6 +218,7 @@ import Plant from "@/components/shared/Plant";
 import Journal from "@/models/Journal";
 import { getPakistanDayStart, getPakistanDayEnd } from "@/lib/journal/today";
 import { getCurrentWeekNumber, getWeekWindow } from "@/lib/quiz/weeks";
+import ExerciseSession from "@/models/ExerciseSession";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -249,16 +248,27 @@ export default async function Home() {
 
   // ---- quiz availability, based on the same week logic as /api/quiz/current ----
   const weekNumber = getCurrentWeekNumber(new Date(user.createdAt));
-  const { weekStart, weekEnd } = getWeekWindow(new Date(user.createdAt), weekNumber);
+  const { weekStart, weekEnd } = getWeekWindow(
+    new Date(user.createdAt),
+    weekNumber,
+  );
 
-  const thisWeeksResult = await QuizResult.findOne({ userId: user._id, weekStart });
+  const thisWeeksResult = await QuizResult.findOne({
+    userId: user._id,
+    weekStart,
+  });
 
   const now = new Date();
   const daysUntilQuiz = thisWeeksResult
-    ? Math.max(0, Math.ceil((weekEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(
+        0,
+        Math.ceil((weekEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      )
     : 0;
 
-  const latestResult = await QuizResult.findOne({ userId: user._id }).sort({ weekStart: -1 });
+  const latestResult = await QuizResult.findOne({ userId: user._id }).sort({
+    weekStart: -1,
+  });
   const weeklyCheckinScore = latestResult
     ? `${Math.round((latestResult.totalScore / latestResult.maxScore) * 100)}%`
     : "—";
@@ -269,13 +279,22 @@ export default async function Home() {
   }).select("date");
 
   const uniqueJournalDays = new Set(
-    journalEntriesThisWeek.map((entry) => entry.date.toISOString().slice(0, 10))
+    journalEntriesThisWeek.map((entry) =>
+      entry.date.toISOString().slice(0, 10),
+    ),
   );
 
   const weeklyJournalCount = `${uniqueJournalDays.size}/7`;
 
-  // TODO: replace once an Exercise/activity-log model exists
-  const weeklyExerciseCount = "0";
+  // Counts every scored exercise session (breathing, sound, memory match, garden) this week.
+  // growthAwarded > 0 filters out abandoned/too-short sessions that the scoring functions rejected.
+  const weeklyExerciseSessionCount = await ExerciseSession.countDocuments({
+    userId: user._id,
+    completedAt: { $gte: weekStart, $lt: weekEnd },
+    growthAwarded: { $gt: 0 },
+  });
+
+  const weeklyExerciseCount = `${weeklyExerciseSessionCount}`;
 
   // TODO: pull from a real TherapistAdvice/assignment model once therapist side is built
   const therapistAdvice = [
@@ -311,11 +330,15 @@ export default async function Home() {
             <div className="mt-6 flex gap-4">
               <div className="rounded-full bg-green/10 px-6 py-4 text-center">
                 <p className="text-xs opacity-60">Current score</p>
-                <p className="font-body text-lg font-extrabold text-heading">{currentScore}</p>
+                <p className="font-body text-lg font-extrabold text-heading">
+                  {currentScore}
+                </p>
               </div>
               <div className="rounded-full bg-green/10 px-6 py-4 text-center">
                 <p className="text-xs opacity-60">Next growth</p>
-                <p className="font-body text-lg font-extrabold text-heading">{nextGrowthLabel}</p>
+                <p className="font-body text-lg font-extrabold text-heading">
+                  {nextGrowthLabel}
+                </p>
               </div>
             </div>
 
