@@ -1,5 +1,6 @@
 // tailwind.config.js
 module.exports = {
+  darkMode: "class",
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
 
   theme: {
@@ -18,6 +19,8 @@ module.exports = {
         peachsoft: "rgb(var(--color-peachsoft) / <alpha-value>)",
         blue: "rgb(var(--color-blue) / <alpha-value>)",
         bluesoft: "rgb(var(--color-bluesoft) / <alpha-value>)",
+        canvas: "rgb(var(--color-canvas) / <alpha-value>)",
+        authbg: "rgb(var(--color-authbg) / <alpha-value>)",
 
         button: "var(--button-clr)",
       },

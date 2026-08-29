@@ -24,7 +24,7 @@ export async function getCurrentUser(): Promise<Omit<
     await db();
 
     const user = await Users.findById(decoded.userId)
-      .select("-password")
+      .select("-passwordHash")
       .lean<Omit<IUser, "password">>();
 
     return user;

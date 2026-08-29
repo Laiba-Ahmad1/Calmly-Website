@@ -80,18 +80,18 @@ export default function SignupPage() {
     <main>
       {step === 1 && (
         <>
-          <h1 className="text-3xl mb-1 text-background">Create your account</h1>
-          <p className="text-sm text-background/70 mb-8">
+          <h1 className="text-3xl mb-1 text-[rgb((var(--color-background)))]">Create your account</h1>
+          <p className="text-sm text-[rgb((var(--color-background)/70))] mb-8">
             First, tell us which side you're on.
           </p>
 
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => goToStep2("patient")}
-              className="rounded-xl border-2 border-green/40 bg-white p-5 text-left transition hover:border-green"
+              className="rounded-xl border-2 border-[rgb((var(--color-green)/40))] bg-white p-5 text-left transition hover:border-green"
             >
-              <div className="text-sm font-semibold text-heading">I'm a patient</div>
-              <div className="mt-1 text-xs text-text/70">
+              <div className="text-sm font-semibold text-[rgb((var(--color-heading)))]">I'm a patient</div>
+              <div className="mt-1 text-xs text-[rgb((var(--color-text)/70))]">
                 Journal, track mood, grow your plant.
               </div>
             </button>
@@ -107,7 +107,7 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <p className="mt-8 text-center text-sm text-background/70">
+          <p className="mt-8 text-center text-sm text-[rgb((var(--color-background)/70))]">
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-background underline">
               Log in

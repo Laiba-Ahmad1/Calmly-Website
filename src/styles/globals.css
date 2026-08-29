@@ -21,9 +21,30 @@
   --color-peachsoft: 251 238 232;
   --color-blue:135 177 190;
   --color-bluesoft:232 243 246;
+  --color-canvas: 167 191 133;
   
   --button-clr: rgb(var(--color-green));
   --background: rgb(var(--color-background));
   --heading: rgb(var(--color-heading));
   --text: rgb(var(--color-text));
+}
+
+:root.dark {
+  --color-green: 176 199 140;       /* brighter sage — needs the lift for contrast on dark bg */
+  --color-background: 24 27 24;      /* near-black, warm green undertone — not pure black */
+  --color-heading: 205 214 186;      /* pale sage, replaces the olive heading tone */
+  --color-text: 198 203 196;         /* soft warm gray for body text */
+  --color-authbg: 128 150 96; 
+
+  --color-greensoft: 41 49 38;       /* dark mossy surface — cards, soft-tint backgrounds */
+  --color-lavender: 196 178 224;     /* lifted lavender accent */
+  --color-lavendersoft: 47 42 58;    /* deep plum-gray surface */
+  --color-peach: 224 158 138;        /* warmed, lifted peach accent */
+  --color-peachsoft: 54 40 36;       /* deep warm brown surface */
+  --color-blue: 150 190 204;         /* lifted dusty blue accent */
+  --color-bluesoft: 30 42 46;   
+  --color-canvas: 20 24 21;     /* deep teal-gray surface */
+  --color-authbg: 22 26 18;
+
+  color-scheme: dark; /* tells the browser to dark-theme native form controls, scrollbars */
 }

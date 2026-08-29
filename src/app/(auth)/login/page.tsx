@@ -133,6 +133,11 @@ export default function LoginPage() {
         return;
       }
 
+      if (data.role === "admin") {
+       router.push("/admin/therapists");
+       return;
+      }
+
       router.push(data.role === "therapist" ? "/therapist/dashboard" : "/home");
     } catch {
       setError("Something went wrong. Try again.");

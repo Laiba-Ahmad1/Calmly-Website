@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 const NAV_ITEMS = [
   { href: "/home", icon: "⌂", label: "Home" },
   { href: "/weekly-report", icon: "▦", label: "Weekly report" },
-  { href: "/therapists", icon: "⚕", label: "Therapists" },
+  { href: "/therapistFind", icon: "⚕", label: "Therapists" },
   { href: "/settings", icon: "⚙", label: "Settings" },
 ];
 

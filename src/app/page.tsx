@@ -15,7 +15,7 @@ export default async function LandingPage() {
 
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-green p-6 sm:gap-10">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden bg-canvas p-6 sm:gap-10">
       <div
         className="pointer-events-none absolute -top-16 -left-16 h-40 w-40 bg-white/10 sm:h-56 sm:w-56 lg:h-72 lg:w-72"
         style={{ borderRadius: "63% 37% 30% 70% / 50% 45% 55% 50%" }}

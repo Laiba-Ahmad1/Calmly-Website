@@ -8,6 +8,8 @@ export interface ITherapistProfile extends Document {
   documentName: string;      // original filename, for display
   verificationStatus: VerificationStatus;
   rejectionReason?: string;  // optional, if you want to tell them why
+  bio: string;                // short bio or description
+  avatarUrl: string;             // optional avatar/profile picture URL
   submittedAt: Date;
   reviewedAt?: Date;
 }
@@ -40,6 +42,15 @@ const TherapistProfileSchema = new Schema<ITherapistProfile>(
     rejectionReason: {
       type: String,
     },
+    
+    bio: {
+     type: String,
+     trim: true,
+     maxlength: 300,
+    },
+    avatarUrl: {
+      type: String,
+    }, 
 
     submittedAt: {
       type: Date,

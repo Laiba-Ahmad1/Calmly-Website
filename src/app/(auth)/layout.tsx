@@ -34,7 +34,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#809660] p-6">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-authbg p-6">
       {/* ---- decorative blobby bubbles, scattered around the card ---- */}
       <div
         className="pointer-events-none absolute -top-16 -left-16 h-72 w-72 bg-white/10"
@@ -61,18 +61,18 @@ export default function AuthLayout({
         style={{ borderRadius: "60% 40% 50% 50% / 35% 65% 35% 65%" }}
       />
 
-      <div className="relative z-10 flex w-full max-w-4xl overflow-hidden rounded-[2rem] bg-[rgb(var(--color-green))] shadow-xl min-h-[600px]">
+      <div className="relative z-10 flex w-full max-w-4xl overflow-hidden rounded-[2rem] bg-canvas shadow-xl min-h-[600px]">
         <div className="relative hidden w-1/2 md:block">
           <PlantBlob />
-          <div className="absolute top-8 left-8 z-10 text-sm font-logo text-xl text-[rgb(var(--color-heading))]">
+          <div className="absolute top-8 left-8 z-10 text-sm font-logo text-xl text-heading">
             Calmly
           </div>
-          <div className="absolute bottom-8 left-8 z-10 text-xs text-[rgb(var(--color-text))]">
+          <div className="absolute bottom-8 left-8 z-10 text-xs text-text">
             grow a little, every day
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-center border-l border-dashed  border-[rgb(var(--color-background))] bg-[rgb(var(--color-green))] px-8 py-12 md:w-1/2">
+        <div className="flex w-full items-center justify-center border-l border-dashed  border-background bg-canvas px-8 py-12 md:w-1/2">
           <div className="w-full max-w-sm">{children}</div>
         </div>
       </div>
