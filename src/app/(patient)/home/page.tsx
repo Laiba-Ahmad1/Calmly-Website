@@ -269,9 +269,7 @@ export default async function Home() {
   const latestResult = await QuizResult.findOne({ userId: user._id }).sort({
     weekStart: -1,
   });
-  const weeklyCheckinScore = latestResult
-    ? `${Math.round((latestResult.totalScore / latestResult.maxScore) * 100)}%`
-    : "—";
+  const weeklyCheckinStatus = thisWeeksResult ? "Submitted" : "Pending";
 
   const journalEntriesThisWeek = await Journal.find({
     patientId: user._id,
@@ -391,7 +389,7 @@ export default async function Home() {
         <HomeProgressSection
           weeklyJournalCount={weeklyJournalCount}
           weeklyExerciseCount={weeklyExerciseCount}
-          weeklyCheckinScore={weeklyCheckinScore}
+          weeklyCheckinStatus={weeklyCheckinStatus}
           therapistAdvice={therapistAdvice}
         />
       </div>

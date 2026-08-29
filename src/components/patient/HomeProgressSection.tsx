@@ -6,14 +6,14 @@ import { useEffect, useRef, useState } from "react";
 interface HomeProgressSectionProps {
   weeklyJournalCount: string;
   weeklyExerciseCount: string;
-  weeklyCheckinScore: string;
+  weeklyCheckinStatus: string;
   therapistAdvice: string[];
 }
 
 export default function HomeProgressSection({
   weeklyJournalCount,
   weeklyExerciseCount,
-  weeklyCheckinScore,
+  weeklyCheckinStatus,
   therapistAdvice,
 }: HomeProgressSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,7 @@ export default function HomeProgressSection({
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <ProgressCard label="Journal" value={weeklyJournalCount} />
         <ProgressCard label="Exercises" value={weeklyExerciseCount} />
-        <ProgressCard label="Weekly check-in" value={weeklyCheckinScore} />
+        <ProgressCard label="Weekly check-in" value={weeklyCheckinStatus} />
       </div>
 
       <h2 className="mt-12 font-heading text-xl font-bold text-heading">
