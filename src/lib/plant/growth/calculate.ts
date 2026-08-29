@@ -16,31 +16,33 @@ export function scoreBreathing(p: BreathingPayload) {
   if (p.sessionSeconds < MIN_SECONDS) return { growth: 0, completed: false };
   const ratio = clamp01(p.cycleCount / p.targetCycles);
   const completed = p.cycleCount >= p.targetCycles;
-  const growth = Math.round(10 * ratio) + (completed ? 5 : 0);
+  const growth = Math.round((2 * ratio) + (completed ? 1 : 0));
   return { growth, completed };
 }
 
 export function scoreMemoryMatch(p: MemoryMatchPayload) {
   if (p.sessionSeconds < MIN_SECONDS) return { growth: 0, completed: false };
   const accuracy = p.attempts === 0 ? 0 : clamp01(p.matches / p.attempts);
-  const growth = Math.round(15 * (p.matches / p.totalPairs)) 
-    + Math.round(5 * accuracy) 
-    + (p.won ? 5 : 0);
-  return { growth, completed: p.won };
+  const growth = Math.round(1.8 * (p.matches / p.totalPairs))
+    + Math.round(0.6 * accuracy)
+    + (p.won ? 0.6 : 0);
+  return { growth: Math.round(growth), completed: p.won };
 }
 
 export function scoreSound(p: SoundPayload) {
   // Passive/ambient — reward listening time only, capped low since there's no active engagement to measure
   if (p.sessionSeconds < MIN_SECONDS) return { growth: 0, completed: false };
-  const growth = Math.min(10, Math.floor(p.sessionSeconds / 30));
-  return { growth, completed: true };
+  const growth = Math.min(3, Math.floor(p.sessionSeconds / 30) * 1.5);
+  return { growth: Math.round(growth), completed: true };
 }
 
 export function scoreGarden(p: GardenPayload) {
   if (p.sessionSeconds < MIN_SECONDS) return { growth: 0, completed: false };
   const completed = p.sessionSeconds >= p.targetSeconds;
-  const restoreScore = Math.round(15 * clamp01(p.restoredPercent / 100));
-  const collectibleBonus = Math.min(5, (p.seeds + p.stars * 2 + p.butterflies * 3) * 0.2);
-  const growth = restoreScore + Math.round(collectibleBonus) + (completed ? 5 : 0);
+  const growth = Math.round(
+    3 * clamp01(p.restoredPercent / 100) +
+    Math.min(1, (p.seeds + p.stars * 2 + p.butterflies * 3) * 0.04) +
+    (completed ? 1 : 0)
+  );
   return { growth, completed };
 }

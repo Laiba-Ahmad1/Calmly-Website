@@ -1,10 +1,8 @@
 
-
-
-// src/app/(patient)/journal/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/shared/Button";
 import { getJournalGreeting } from "@/lib/journal/greeting";
 import { SleepQuality, Mood } from "@/lib/journal/mappings";
@@ -38,6 +36,7 @@ const MOCK_TODOS: TodoItem[] = [
 ];
 
 export default function JournalForm() {
+  const router = useRouter();
   const [reflection, setReflection] = useState("");
   const [feelings, setFeelings] = useState("");
   const [sleepQuality, setSleepQuality] = useState<SleepQuality | null>(null);
@@ -70,7 +69,6 @@ export default function JournalForm() {
 
   async function handleSubmit() {
     setError("");
-    setSaved(false);
 
     if (!reflection.trim() || !feelings.trim()) {
       setError("Fill in both reflections and feelings before submitting.");
@@ -97,6 +95,7 @@ export default function JournalForm() {
       });
 
       if (!res.ok) throw new Error("Failed to save");
+
       setSaved(true);
     } catch {
       setError("Couldn't save right now — try again in a moment.");
@@ -133,7 +132,8 @@ export default function JournalForm() {
                 onChange={(e) => setReflection(e.target.value)}
                 placeholder="What did you notice about your anxiety today?"
                 rows={10}
-                className="h-56 w-full resize-none rounded-2xl border border-green/30 bg-green/10 p-4 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                disabled={saved}
+                className="h-56 w-full resize-none rounded-2xl border border-green/30 bg-green/10 p-4 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30 disabled:opacity-60"
               />
             </div>
 
@@ -146,8 +146,9 @@ export default function JournalForm() {
                   <button
                     key={opt.value}
                     type="button"
+                    disabled={saved}
                     onClick={() => setSleepQuality(opt.value)}
-                    className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-1.5 transition ${
+                    className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-1.5 transition disabled:opacity-60 ${
                       sleepQuality === opt.value
                         ? "border-green bg-green/20"
                         : "border-green/30 bg-green/5 hover:bg-green/10"
@@ -171,8 +172,9 @@ export default function JournalForm() {
                   <button
                     key={opt.value}
                     type="button"
+                    disabled={saved}
                     onClick={() => setMood(opt.value)}
-                    className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-1.5 transition ${
+                    className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-1.5 transition disabled:opacity-60 ${
                       mood === opt.value
                         ? "border-green bg-green/20"
                         : "border-green/30 bg-green/5 hover:bg-green/10"
@@ -204,7 +206,8 @@ export default function JournalForm() {
                 onChange={(e) => setFeelings(e.target.value)}
                 placeholder="How did today make you feel?"
                 rows={10}
-                className="h-56 w-full resize-none rounded-2xl border border-green/30 bg-green/10 p-4 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                disabled={saved}
+                className="h-56 w-full resize-none rounded-2xl border border-green/30 bg-green/10 p-4 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30 disabled:opacity-60"
               />
             </div>
 
@@ -217,8 +220,9 @@ export default function JournalForm() {
                   <button
                     key={todo.id}
                     type="button"
+                    disabled={saved}
                     onClick={() => toggleTodo(todo.id)}
-                    className="flex items-center gap-3 rounded-lg p-2 text-left transition hover:bg-green/10"
+                    className="flex items-center gap-3 rounded-lg p-2 text-left transition hover:bg-green/10 disabled:opacity-60"
                   >
                     <span
                       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
@@ -243,10 +247,14 @@ export default function JournalForm() {
 
             <div className="mt-auto flex flex-col gap-3">
               {error && <p className="text-sm text-red-600">{error}</p>}
-              {saved && <p className="text-sm text-heading">Saved for today ✓</p>}
+              {saved && (
+                <p className="text-sm text-heading">
+                  Saved for today, your plant grew a little! 🌱
+                </p>
+              )}
 
-              <Button onClick={handleSubmit} disabled={submitting}>
-                {submitting ? "Saving..." : "Submit"}
+              <Button onClick={handleSubmit} disabled={submitting || saved}>
+                {saved ? "Saved ✓" : submitting ? "Saving..." : "Submit"}
               </Button>
             </div>
           </div>

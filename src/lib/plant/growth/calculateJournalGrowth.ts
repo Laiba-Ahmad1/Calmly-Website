@@ -1,27 +1,54 @@
 // lib/plant/growth/calculateJournalGrowth.ts
+import { compareJournalGrowth } from "@/lib/ai/compareJournalGrowth";
 
-interface JournalGrowthParams {
-  mood: number;          // 1-5
-  sleepQuality: number;  // 1-5
+interface PreviousEntry {
   feelings: string;
   reflection: string;
+  date: Date;
 }
 
-const FEELINGS_WRITE_BONUS = 5;
-const REFLECTION_WRITE_BONUS = 5;
+interface TodoItem {
+  text: string;
+  done: boolean;
+}
 
-export function calculateJournalGrowth({
+interface JournalGrowthParams {
+  mood: number; // 1-5
+  sleepQuality: number; // 1-5
+  feelings: string;
+  reflection: string;
+  todos: TodoItem[];
+  previousEntries: PreviousEntry[]; // last 7 entries, oldest → newest
+}
+
+const JOURNAL_SUBMISSION_BONUS = 3; // flat, unconditional — awarded just for writing today
+const IMPROVEMENT_BONUS = 2; // only if AI judges today's feelings/reflection better than the recent pattern
+const TODO_COMPLETION_BONUS = 1; // per checked-off therapist task
+const MIN_ENTRIES_FOR_COMPARISON = 7;
+
+export async function calculateJournalGrowth({
   mood,
   sleepQuality,
   feelings,
   reflection,
-}: JournalGrowthParams) {
-  // Averaged (not summed) so a great mood + great sleep day caps at 5,
-  // keeping the max entry around 15 total in line with other exercises.
-  const wellbeingGrowth = Math.round((mood + sleepQuality) / 2); // range: 1-5
+  todos,
+  previousEntries,
+}: JournalGrowthParams): Promise<number> {
+  // 0.5-increment wellbeing score: mood/sleep of 1→0.5, 2→1, 3→1.5, 4→2, 5→2.5
+  const wellbeingGrowth = ((mood + sleepQuality) / 2) * 0.5;
 
-  const feelingsBonus = feelings.trim().length > 0 ? FEELINGS_WRITE_BONUS : 0;
-  const reflectionBonus = reflection.trim().length > 0 ? REFLECTION_WRITE_BONUS : 0;
+  const completedTodosCount = todos.filter((t) => t.done).length;
+  const todoGrowth = completedTodosCount * TODO_COMPLETION_BONUS;
 
-  return wellbeingGrowth + feelingsBonus + reflectionBonus;
+  let growth = wellbeingGrowth + JOURNAL_SUBMISSION_BONUS + todoGrowth;
+
+  if (previousEntries.length >= MIN_ENTRIES_FOR_COMPARISON) {
+    const improved = await compareJournalGrowth({
+      today: { feelings, reflection },
+      previousEntries,
+    });
+    if (improved) growth += IMPROVEMENT_BONUS;
+  }
+
+  return growth;
 }

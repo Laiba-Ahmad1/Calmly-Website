@@ -34,7 +34,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-authbg p-6">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#809660] p-6">
       {/* ---- decorative blobby bubbles, scattered around the card ---- */}
       <div
         className="pointer-events-none absolute -top-16 -left-16 h-72 w-72 bg-white/10"
