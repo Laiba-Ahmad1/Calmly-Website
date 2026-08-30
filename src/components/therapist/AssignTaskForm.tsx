@@ -4,7 +4,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AssignTaskForm({ patientId }: { patientId: string }) {
+export interface AssignTaskLabels {
+  placeholder: string;
+  assign: string;
+  assigning: string;
+  assigned: string;
+  error: string;
+}
+
+export default function AssignTaskForm({
+  patientId,
+  labels,
+}: {
+  patientId: string;
+  labels: AssignTaskLabels;
+}) {
   const router = useRouter();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,14 +44,14 @@ export default function AssignTaskForm({ patientId }: { patientId: string }) {
 
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        throw new Error(data?.error ?? "Failed to assign the to-do");
+        throw new Error(data?.error ?? labels.error);
       }
 
       setText("");
       setAssigned(true);
       router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to assign the to-do");
+    } catch {
+      setError(labels.error);
     } finally {
       setBusy(false);
     }
@@ -51,7 +65,7 @@ export default function AssignTaskForm({ patientId }: { patientId: string }) {
         rows={2}
         maxLength={300}
         disabled={busy}
-        placeholder='e.g. "Practice slow breathing for 5 minutes before bed"'
+        placeholder={labels.placeholder}
         className="w-full resize-none rounded-2xl border border-blue/30 bg-background p-4 font-body text-sm text-text outline-none transition focus:border-blue focus:ring-2 focus:ring-blue/30 disabled:opacity-60"
       />
 
@@ -61,12 +75,10 @@ export default function AssignTaskForm({ patientId }: { patientId: string }) {
           disabled={busy || !text.trim()}
           className="rounded-full bg-blue px-5 py-2 font-body text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-40"
         >
-          {busy ? "Assigning…" : "Assign to-do"}
+          {busy ? labels.assigning : labels.assign}
         </button>
         {assigned && (
-          <p className="font-body text-sm text-heading">
-            To-do assigned — it will appear in the patient&apos;s journal.
-          </p>
+          <p className="font-body text-sm text-heading">{labels.assigned}</p>
         )}
       </div>
 

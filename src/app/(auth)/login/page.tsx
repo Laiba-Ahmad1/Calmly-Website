@@ -1,129 +1,63 @@
-// "use client";
-
-// import { useState } from "react";
-// import { useRouter } from "next/navigation";
-// import Link from "next/link";
-
-// export default function LoginPage() {
-//   const router = useRouter();
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [error, setError] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   async function handleSubmit(e: React.FormEvent) {
-//     e.preventDefault();
-//     setError("");
-//     setLoading(true);
-
-//     try {
-//       const res = await fetch("/api/auth/login", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ email, password }),
-//       });
-
-//       const data = await res.json();
-
-//       if (!res.ok) {
-//         setError(data.error || "Login failed");
-//         return;
-//       }
-
-//       if (data.role === "therapist" && data.verificationStatus !== "approved") {
-//         router.push("/therapist/pending");
-//         return;
-//       }
-
-//       router.push(data.role === "therapist" ? "/therapist/dashboard" : "/home");
-//     } catch {
-//       setError("Something went wrong. Try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   return (
-// <main>
-//       <h1 className="text-3xl mb-1">Welcome back</h1>
-//       <p className="text-sm text-[var(--color-text)]/70 mb-8">
-//         Log in to continue your journal streak.
-//       </p>
-
-//       <form onSubmit={handleSubmit} className="space-y-4">
-//         <div>
-//           <label className="block text-sm font-semibold mb-1">Email</label>
-//           <input
-//             type="email"
-//             required
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//             placeholder="you@example.com"
-//             className="w-full rounded-lg border border-[var(--color-green)]/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-[var(--color-green)] focus:ring-2 focus:ring-[var(--color-green)]/30"
-//           />
-//         </div>
-
-//         <div>
-//           <label className="block text-sm font-semibold mb-1">Password</label>
-//           <input
-//             type="password"
-//             required
-//             value={password}
-//             onChange={(e) => setPassword(e.target.value)}
-//             placeholder="Enter your password"
-//             className="w-full rounded-lg border border-[var(--color-green)]/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-[var(--color-green)] focus:ring-2 focus:ring-[var(--color-green)]/30"
-//           />
-//         </div>
-
-//         {error && <p className="text-sm text-red-600">{error}</p>}
-
-//         <button
-//           type="submit"
-//           disabled={loading}
-//           className="w-full rounded-lg bg-[var(--color-green)] py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
-//         >
-//           {loading ? "Logging in..." : "Log in"}
-//         </button>
-
-//         <p className="text-center text-sm text-[var(--color-text)]/70">
-//           Don't have an account?{" "}
-//           <Link href="/signup" className="font-medium text-[var(--color-heading)] underline">
-//             Sign up
-//           </Link>
-//         </p>
-//       </form>
-//       </main>
-//   );
-// }
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/shared/Button";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified") === "1") {
+      setNotice("Your email is verified — log in to continue.");
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: trimmedEmail, password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.needsVerification) {
+          router.push(
+            `/verify-email?email=${encodeURIComponent(trimmedEmail)}&pending=1`
+          );
+          return;
+        }
         setError(data.error || "Login failed");
         return;
       }
@@ -156,6 +90,7 @@ export default function LoginPage() {
           <input
             type="email"
             required
+            maxLength={254}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -168,6 +103,7 @@ export default function LoginPage() {
           <input
             type="password"
             required
+            maxLength={128}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
@@ -175,15 +111,9 @@ export default function LoginPage() {
           />
         </div>
 
+        {notice && <p className="text-sm text-heading">{notice}</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {/* <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-lg bg-background py-2.5 text-sm font-semibold text-green transition hover:brightness-95 disabled:opacity-60"
-        >
-          {loading ? "Logging in..." : "Log in"}
-        </button> */}
         <Button
           type="submit"
           disabled={loading}
@@ -194,7 +124,17 @@ export default function LoginPage() {
         </Button>
 
         <p className="text-center text-sm text-background/70">
-          Don't have an account?{" "}
+          Forgot your password?{" "}
+          <Link
+            href="/forgot-password"
+            className="font-medium text-background underline"
+          >
+            Reset it
+          </Link>
+        </p>
+
+        <p className="text-center text-sm text-background/70">
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="font-medium text-background underline">
             Sign up
           </Link>

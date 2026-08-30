@@ -4,35 +4,29 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const SECTIONS = [
-  {
-    key: "overallObservation",
-    label: "Overall Weekly Observation",
-    placeholder: "How was the patient's week overall, based on their logged activity?",
-  },
-  {
-    key: "progressAndStrength",
-    label: "Progress and Strength",
-    placeholder: "What went well? What strengths did the patient show this week?",
-  },
-  {
-    key: "areasToFocusOn",
-    label: "Areas to Focus On",
-    placeholder: "Which areas deserve gentle attention in the coming week?",
-  },
-  {
-    key: "feedbackAndGuidance",
-    label: "Feedback and Guidance",
-    placeholder: "Personal guidance in your own words.",
-  },
-] as const;
+export interface FeedbackFormLabels {
+  hint: string;
+  saved: string;
+  saving: string;
+  // interpolated server-side is not possible for a dynamic week number, so
+  // the label is passed with a {week} placeholder and interpolated here
+  saveFor: string;
+  error: string;
+  errorGeneric: string;
+  sections: { key: string; label: string; placeholder: string }[];
+}
 
-type SectionKey = (typeof SECTIONS)[number]["key"];
+type SectionKey =
+  | "overallObservation"
+  | "progressAndStrength"
+  | "areasToFocusOn"
+  | "feedbackAndGuidance";
 
 export default function FeedbackForm({
   patientId,
   weekNumber,
   existing,
+  labels,
 }: {
   patientId: string;
   weekNumber: number;
@@ -42,6 +36,7 @@ export default function FeedbackForm({
     areasToFocusOn: string;
     feedbackAndGuidance: string;
   } | null;
+  labels: FeedbackFormLabels;
 }) {
   const router = useRouter();
   const [values, setValues] = useState<Record<SectionKey, string>>({
@@ -68,14 +63,14 @@ export default function FeedbackForm({
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not save feedback");
+        setError(data.error || labels.error);
         return;
       }
 
       setSavedAt(Date.now());
       router.refresh();
     } catch {
-      setError("Something went wrong. Try again.");
+      setError(labels.errorGeneric);
     } finally {
       setSaving(false);
     }
@@ -84,19 +79,19 @@ export default function FeedbackForm({
   return (
     <form onSubmit={handleSubmit} className="mt-4">
       <p className="font-body text-xs text-text/50">
-        Written in your own words — the patient sees this under Feedback.
+        {labels.hint}
         {savedAt && (
-          <span className="ml-2 font-semibold text-blue">Saved</span>
+          <span className="ml-2 font-semibold text-blue">{labels.saved}</span>
         )}
       </p>
 
-      {SECTIONS.map((section) => (
+      {labels.sections.map((section) => (
         <div key={section.key} className="mt-5">
           <label className="font-body text-sm font-bold text-heading">
             {section.label}
           </label>
           <textarea
-            value={values[section.key]}
+            value={values[section.key as SectionKey]}
             onChange={(e) =>
               setValues((prev) => ({ ...prev, [section.key]: e.target.value }))
             }
@@ -114,7 +109,9 @@ export default function FeedbackForm({
           disabled={saving}
           className="rounded-full bg-blue px-6 py-2.5 font-body text-sm font-semibold text-background transition hover:bg-blue/85 disabled:opacity-50"
         >
-          {saving ? "Saving..." : `Save feedback for week ${weekNumber}`}
+          {saving
+            ? labels.saving
+            : labels.saveFor.replace("{week}", String(weekNumber))}
         </button>
         {error && <p className="font-body text-sm text-red-500">{error}</p>}
       </div>

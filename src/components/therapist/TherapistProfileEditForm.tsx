@@ -6,14 +6,29 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+export interface ProfileEditLabels {
+  aboutYou: string;
+  bioPlaceholder: string;
+  changePicture: string;
+  uploadPicture: string;
+  removeSelected: string;
+  save: string;
+  saving: string;
+  saved: string;
+  errorSave: string;
+  errorGeneric: string;
+}
+
 export default function TherapistProfileEditForm({
   initialBio,
   avatarUrl,
   initialLetter,
+  labels,
 }: {
   initialBio: string;
   avatarUrl?: string | null;
   initialLetter: string;
+  labels: ProfileEditLabels;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +71,7 @@ export default function TherapistProfileEditForm({
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not save changes");
+        setError(data.error || labels.errorSave);
         return;
       }
 
@@ -64,7 +79,7 @@ export default function TherapistProfileEditForm({
       setSelectedFile(null);
       router.refresh();
     } catch {
-      setError("Something went wrong. Try again.");
+      setError(labels.errorGeneric);
     } finally {
       setSaving(false);
     }
@@ -80,7 +95,7 @@ export default function TherapistProfileEditForm({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview}
-            alt="Profile picture"
+            alt=""
             className="h-20 w-20 rounded-full border border-blue/25 object-cover"
           />
         ) : (
@@ -102,7 +117,7 @@ export default function TherapistProfileEditForm({
             onClick={() => fileInputRef.current?.click()}
             className="rounded-full border border-blue/30 px-4 py-2 font-body text-sm font-semibold text-heading transition hover:bg-blue/10"
           >
-            {avatarUrl ? "Change picture" : "Upload picture"}
+            {avatarUrl ? labels.changePicture : labels.uploadPicture}
           </button>
           {selectedFile && (
             <button
@@ -110,7 +125,7 @@ export default function TherapistProfileEditForm({
               onClick={clearFile}
               className="font-body text-xs text-text/50 underline-offset-2 hover:underline"
             >
-              Remove selected file
+              {labels.removeSelected}
             </button>
           )}
         </div>
@@ -119,7 +134,7 @@ export default function TherapistProfileEditForm({
       {/* bio */}
       <label className="mt-6 block">
         <span className="font-body text-sm font-bold text-heading">
-          About you
+          {labels.aboutYou}
         </span>
         <textarea
           value={bio}
@@ -129,7 +144,7 @@ export default function TherapistProfileEditForm({
           }}
           rows={4}
           maxLength={300}
-          placeholder="A short professional bio your patients will see."
+          placeholder={labels.bioPlaceholder}
           className="mt-1.5 w-full resize-none rounded-xl border border-blue/25 bg-background px-4 py-3 font-body text-sm leading-relaxed text-text outline-none placeholder:text-text/35 focus:border-blue/60"
         />
         <span className="mt-1 block font-body text-xs text-text/40">
@@ -143,10 +158,12 @@ export default function TherapistProfileEditForm({
           disabled={saving}
           className="rounded-full bg-blue px-6 py-2.5 font-body text-sm font-semibold text-background transition hover:bg-blue/85 disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save changes"}
+          {saving ? labels.saving : labels.save}
         </button>
         {saved && (
-          <span className="font-body text-sm font-semibold text-blue">Saved</span>
+          <span className="font-body text-sm font-semibold text-blue">
+            {labels.saved}
+          </span>
         )}
         {error && <p className="font-body text-sm text-red-500">{error}</p>}
       </div>

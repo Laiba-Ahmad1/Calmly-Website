@@ -4,13 +4,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireTherapist } from "@/lib/therapist/guard";
 import { getNotificationsForUser, markAllRead } from "@/lib/notifications";
-import { formatRelative } from "@/lib/format";
+import { getTherapistT, therapistRelative } from "@/lib/i18n/server";
 
 export default async function TherapistNotificationsPage() {
   const therapist = await requireTherapist();
   if (!therapist) redirect("/login");
 
-  const notifications = await getNotificationsForUser(therapist._id);
+  const [{ language, t }, notifications] = await Promise.all([
+    getTherapistT(therapist._id.toString()),
+    getNotificationsForUser(therapist._id),
+  ]);
 
   if (notifications.some((n) => !n.read)) {
     await markAllRead(therapist._id);
@@ -19,12 +22,12 @@ export default async function TherapistNotificationsPage() {
   return (
     <div>
       <h1 className="font-body text-3xl font-extrabold text-heading">
-        Notifications
+        {t("t_notif_title")}
       </h1>
 
       {notifications.length === 0 ? (
         <p className="mt-8 font-body text-sm text-text/60">
-          You&apos;re all caught up.
+          {t("t_notif_empty")}
         </p>
       ) : (
         <div className="mt-6 flex flex-col gap-3">
@@ -39,7 +42,7 @@ export default async function TherapistNotificationsPage() {
                 </p>
                 <p className="mt-0.5 font-body text-sm text-text/60">{n.message}</p>
                 <p className="mt-1 font-body text-xs text-text/40">
-                  {formatRelative(n.createdAt)}
+                  {therapistRelative(language, n.createdAt)}
                 </p>
               </>
             );

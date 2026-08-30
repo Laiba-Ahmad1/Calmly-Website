@@ -22,6 +22,28 @@ const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: "Female", label: "Female" },
 ];
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function clientValidate(
+  role: Role | null,
+  name: string,
+  email: string,
+  password: string
+): string | null {
+  const trimmedName = name.trim();
+  if (trimmedName.length < 2) return "Please enter your full name (at least 2 characters).";
+  if (trimmedName.length > 60) return "Name must be 60 characters or fewer.";
+  const trimmedEmail = email.trim();
+  if (!trimmedEmail) return "Please enter your email address.";
+  if (!EMAIL_REGEX.test(trimmedEmail)) return "Please enter a valid email address.";
+  if (password.length < 8) return "Password must be at least 8 characters long.";
+  if (password.length > 128) return "Password must be shorter than 128 characters.";
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password))
+    return "Password must include at least one letter and one number.";
+  if (role !== "patient" && role !== "therapist") return "Please choose an account type.";
+  return null;
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
@@ -47,6 +69,12 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
+    const validationError = clientValidate(role, name, email, password);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     if (!gender) {
       setError("Please select a gender.");
       return;
@@ -68,8 +96,8 @@ export default function SignupPage() {
 
     try {
       const formData = new FormData();
-      formData.append("name", name);
-      formData.append("email", email);
+      formData.append("name", name.trim());
+      formData.append("email", email.trim());
       formData.append("password", password);
       formData.append("role", role!);
       formData.append("gender", gender);
@@ -88,7 +116,7 @@ export default function SignupPage() {
         return;
       }
 
-      router.push(role === "therapist" ? "/pending" : "/login");
+      router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
     } catch {
       setError("Something went wrong. Try again.");
     } finally {
@@ -182,10 +210,14 @@ export default function SignupPage() {
                 type="password"
                 required
                 minLength={8}
+                maxLength={128}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
               />
+              <p className="mt-1 text-xs text-background/60">
+                At least 8 characters, with a letter and a number.
+              </p>
             </div>
 
             <div>

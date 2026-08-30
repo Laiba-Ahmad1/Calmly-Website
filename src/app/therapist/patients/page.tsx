@@ -4,37 +4,47 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireTherapist } from "@/lib/therapist/guard";
 import { getTherapistPatients } from "@/lib/therapist/patients";
-import { formatShortDate, formatRelative } from "@/lib/format";
+import { formatShortDate } from "@/lib/format";
+import { getTherapistT, therapistRelative } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/dictionaries";
 
 export default async function TherapistPatientsPage() {
   const therapist = await requireTherapist();
   if (!therapist) redirect("/login");
 
-  const patients = await getTherapistPatients(therapist._id.toString());
+  const [{ language, t }, patients] = await Promise.all([
+    getTherapistT(therapist._id.toString()),
+    getTherapistPatients(therapist._id.toString()),
+  ]);
 
   return (
     <div>
       <header>
         <h1 className="font-body text-3xl font-extrabold text-heading">
-          Patients
+          {t("t_patients_title")}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">
           {patients.length === 0
-            ? "You are not working with any patients yet."
-            : `${patients.length} connected ${patients.length === 1 ? "patient" : "patients"}.`}
+            ? t("t_patients_empty")
+            : interpolate(
+                patients.length === 1
+                  ? t("t_patients_count_one")
+                  : t("t_patients_count_many"),
+                { count: patients.length }
+              )}
         </p>
       </header>
 
       {patients.length === 0 ? (
         <div className="mt-8 border-t border-blue/20 pt-6">
           <p className="font-body text-sm text-text/70">
-            Accept a patient request to start working together.
+            {t("t_patients_accept_hint")}
           </p>
           <Link
             href="/therapist/requests"
             className="mt-3 inline-block font-body text-sm font-semibold text-blue hover:underline"
           >
-            Go to requests
+            {t("t_patients_go_requests")}
           </Link>
         </div>
       ) : (
@@ -53,36 +63,52 @@ export default async function TherapistPatientsPage() {
                 </Link>
                 <p className="mt-0.5 font-body text-sm text-text/60">
                   {patient.anxietyType ? (
-                    <span className="capitalize">{patient.anxietyType} anxiety</span>
+                    <span className="capitalize">
+                      {interpolate(t("t_patients_anxiety"), {
+                        type: patient.anxietyType,
+                      })}
+                    </span>
                   ) : (
-                    "Anxiety type not set"
+                    t("t_patients_anxiety_not_set")
                   )}
                   {patient.connectedSince && (
-                    <> · connected since {formatShortDate(patient.connectedSince)}</>
+                    <>
+                      {" "}
+                      ·{" "}
+                      {interpolate(t("t_patients_connected_since"), {
+                        date: formatShortDate(patient.connectedSince),
+                      })}
+                    </>
                   )}
                 </p>
                 <p className="mt-0.5 font-body text-sm text-text/50">
                   {patient.lastJournalDate
-                    ? `Last journal ${formatRelative(patient.lastJournalDate)}`
-                    : "No journals yet"}
+                    ? interpolate(t("t_patients_last_journal"), {
+                        when: therapistRelative(language, patient.lastJournalDate),
+                      })
+                    : t("t_patients_no_journals")}
                   {patient.latestReport
-                    ? ` · last report ${formatShortDate(patient.latestReport.weekEnd)}`
-                    : " · no report yet"}
+                    ? ` · ${interpolate(t("t_patients_last_report"), {
+                        date: formatShortDate(patient.latestReport.weekEnd),
+                      })}`
+                    : ` · ${t("t_patients_no_report")}`}
                 </p>
               </div>
 
               <div className="flex shrink-0 items-center gap-5">
                 {patient.latestReport && (
                   <span className="hidden font-body text-xs text-text/50 md:block">
-                    Mood {patient.latestReport.moodAvg ?? "—"}/5 · Sleep{" "}
-                    {patient.latestReport.sleepAvg ?? "—"}/5
+                    {interpolate(t("t_patients_mood_sleep"), {
+                      mood: patient.latestReport.moodAvg ?? "—",
+                      sleep: patient.latestReport.sleepAvg ?? "—",
+                    })}
                   </span>
                 )}
                 <Link
                   href={`/therapist/patients/${patient.patientId}`}
                   className="font-body text-sm font-semibold text-blue hover:underline"
                 >
-                  View patient
+                  {t("t_pd_view_patient")}
                 </Link>
               </div>
             </div>

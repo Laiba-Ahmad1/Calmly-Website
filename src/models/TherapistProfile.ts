@@ -10,6 +10,7 @@ export interface ITherapistProfile extends Document {
   rejectionReason?: string;  // optional, if you want to tell them why
   bio: string;                // short bio or description
   avatarUrl: string;             // optional avatar/profile picture URL
+  language: "en" | "ur";         // therapist UI language preference
   submittedAt: Date;
   reviewedAt?: Date;
 }
@@ -50,7 +51,12 @@ const TherapistProfileSchema = new Schema<ITherapistProfile>(
     },
     avatarUrl: {
       type: String,
-    }, 
+    },
+    language: {
+      type: String,
+      enum: ["en", "ur"],
+      default: "en",
+    },
 
     submittedAt: {
       type: Date,

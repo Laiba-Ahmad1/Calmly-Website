@@ -3,6 +3,12 @@
 
 import { useState } from "react";
 
+export interface RequestsListLabels {
+  empty: string;
+  accept: string;
+  reject: string;
+}
+
 interface RequestItem {
   id: string;
   patientId: string;
@@ -13,8 +19,10 @@ interface RequestItem {
 
 export default function RequestsList({
   initialRequests,
+  labels,
 }: {
   initialRequests: RequestItem[];
+  labels: RequestsListLabels;
 }) {
   const [requests, setRequests] = useState(initialRequests);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -37,8 +45,8 @@ export default function RequestsList({
       }
 
       setRequests((prev) => prev.filter((r) => r.id !== id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+    } catch {
+      setError("Something went wrong");
     } finally {
       setBusyId(null);
     }
@@ -46,10 +54,7 @@ export default function RequestsList({
 
   if (requests.length === 0) {
     return (
-      <p className="mt-4 font-body text-sm text-text/60">
-        No pending requests right now. When a patient sends you a request, it
-        will appear here.
-      </p>
+      <p className="mt-4 font-body text-sm text-text/60">{labels.empty}</p>
     );
   }
 
@@ -70,7 +75,7 @@ export default function RequestsList({
                 {request.patientName}
               </p>
               <p className="mt-0.5 font-body text-sm text-text/60">
-                {request.patientEmail} · requested {request.requestedAt}
+                {request.patientEmail} · {request.requestedAt}
               </p>
             </div>
 
@@ -80,14 +85,14 @@ export default function RequestsList({
                 disabled={busyId === request.id}
                 className="rounded-full bg-blue px-5 py-2 font-body text-sm font-semibold text-background transition hover:opacity-90 disabled:opacity-50"
               >
-                Accept
+                {labels.accept}
               </button>
               <button
                 onClick={() => respond(request.id, "reject")}
                 disabled={busyId === request.id}
                 className="rounded-full border border-blue/40 px-5 py-2 font-body text-sm font-semibold text-text/70 transition hover:bg-blue/10 disabled:opacity-50"
               >
-                Reject
+                {labels.reject}
               </button>
             </div>
           </div>

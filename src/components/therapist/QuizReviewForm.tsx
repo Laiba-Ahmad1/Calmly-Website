@@ -14,16 +14,31 @@ export interface ReviewableQuestion {
   options: string[];
 }
 
+export interface QuizReviewLabels {
+  intro: string; // may contain {week}
+  hint: string;
+  question: string; // may contain {n}
+  options: string;
+  save: string;
+  saving: string;
+  saved: string; // may contain {week}
+  unsaved: string;
+  error: string;
+  errorGeneric: string;
+}
+
 export default function QuizReviewForm({
   patientId,
   weekNumber,
   source,
   questions,
+  labels,
 }: {
   patientId: string;
   weekNumber: number;
   source: string;
   questions: ReviewableQuestion[];
+  labels: QuizReviewLabels;
 }) {
   const router = useRouter();
   const [texts, setTexts] = useState<Record<string, string>>(
@@ -52,14 +67,14 @@ export default function QuizReviewForm({
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not save the questions");
+        setError(data.error || labels.error);
         return;
       }
 
       setSavedAt(Date.now());
       router.refresh();
     } catch {
-      setError("Something went wrong. Try again.");
+      setError(labels.errorGeneric);
     } finally {
       setSaving(false);
     }
@@ -68,17 +83,15 @@ export default function QuizReviewForm({
   return (
     <div className="mt-4">
       <p className="font-body text-xs text-text/50">
-        AI-planned questions for week {weekNumber}
-        {source === "therapist" ? " — you have edited this week's quiz." : "."}{" "}
-        Edit any question to replace it with your version; leave them as they
-        are and the patient automatically receives the AI-planned quiz.
+        {labels.intro.replace("{week}", String(weekNumber))} {labels.hint}
       </p>
 
       <div className="mt-4 space-y-4">
         {questions.map((q, i) => (
           <div key={q.id}>
             <p className="font-body text-xs font-semibold uppercase tracking-wide text-text/40">
-              Question {i + 1} · {q.dimension.replace(/_/g, " ")}
+              {labels.question.replace("{n}", String(i + 1))} ·{" "}
+              {q.dimension.replace(/_/g, " ")}
             </p>
             <textarea
               value={texts[q.id] ?? ""}
@@ -90,7 +103,7 @@ export default function QuizReviewForm({
               className="mt-1 w-full resize-none rounded-xl border border-blue/25 bg-background px-4 py-2.5 font-body text-sm text-text outline-none focus:border-blue/60"
             />
             <p className="mt-1 font-body text-xs text-text/40">
-              Options: {q.options.join(" · ")}
+              {labels.options} {q.options.join(" · ")}
             </p>
           </div>
         ))}
@@ -103,11 +116,11 @@ export default function QuizReviewForm({
           disabled={saving}
           className="rounded-full bg-blue px-6 py-2.5 font-body text-sm font-semibold text-background transition hover:bg-blue/85 disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save my version"}
+          {saving ? labels.saving : labels.save}
         </button>
         {savedAt && (
           <span className="font-body text-sm font-semibold text-blue">
-            Saved — the patient will receive your version for week {weekNumber}.
+            {labels.saved.replace("{week}", String(weekNumber))}
           </span>
         )}
         {error && <p className="font-body text-sm text-red-500">{error}</p>}
@@ -115,7 +128,7 @@ export default function QuizReviewForm({
 
       {anyEdited && !savedAt && (
         <p className="mt-2 font-body text-xs italic text-text/45">
-          You have unsaved edits to this week&apos;s questions.
+          {labels.unsaved}
         </p>
       )}
     </div>

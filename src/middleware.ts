@@ -11,6 +11,7 @@ import type { NextRequest } from "next/server";
 const PATIENT_PREFIXES = [
   "/home",
   "/journal",
+  "/journals",
   "/quiz",
   "/exercises",
   "/plant",
@@ -74,6 +75,7 @@ export const config = {
   matcher: [
     "/home/:path*",
     "/journal/:path*",
+    "/journals/:path*",
     "/quiz/:path*",
     "/exercises/:path*",
     "/plant/:path*",

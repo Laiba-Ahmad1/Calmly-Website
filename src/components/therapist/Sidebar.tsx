@@ -5,19 +5,30 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+export interface TherapistSidebarLabels {
+  dashboard: string;
+  patients: string;
+  requests: string;
+  reports: string;
+  profile: string;
+  workspace: string;
+}
+
 const NAV_ITEMS = [
-  { href: "/therapist", icon: "⌂", label: "Dashboard" },
-  { href: "/therapist/patients", icon: "☺", label: "Patients" },
-  { href: "/therapist/requests", icon: "✉", label: "Requests" },
-  { href: "/therapist/reports", icon: "▦", label: "Reports" },
-  { href: "/therapist/profile", icon: "⚙", label: "Profile" },
+  { href: "/therapist", icon: "⌂", key: "dashboard" as const },
+  { href: "/therapist/patients", icon: "☺", key: "patients" as const },
+  { href: "/therapist/requests", icon: "✉", key: "requests" as const },
+  { href: "/therapist/reports", icon: "▦", key: "reports" as const },
+  { href: "/therapist/profile", icon: "⚙", key: "profile" as const },
 ];
 
 function NavLinks({
+  labels,
   pendingCount,
   onNavigate,
   isActive,
 }: {
+  labels: TherapistSidebarLabels;
   pendingCount: number;
   onNavigate?: () => void;
   isActive: (href: string) => boolean;
@@ -45,7 +56,7 @@ function NavLinks({
             >
               {item.icon}
             </span>
-            {item.label}
+            {labels[item.key]}
             {item.href === "/therapist/requests" && pendingCount > 0 && (
               <span className="ml-auto rounded-full bg-blue px-2 py-0.5 font-body text-[11px] font-bold text-background">
                 {pendingCount}
@@ -138,12 +149,14 @@ export default function TherapistSidebar({
   pendingCount = 0,
   notificationCount = 0,
   avatarUrl,
+  labels,
 }: {
   userName?: string;
   userEmail?: string;
   pendingCount?: number;
   notificationCount?: number;
   avatarUrl?: string | null;
+  labels: TherapistSidebarLabels;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -190,13 +203,13 @@ export default function TherapistSidebar({
           <Link href="/therapist">
             <span className="font-logo text-2xl text-heading">Calmly</span>
             <span className="mt-0.5 block font-body text-[11px] font-semibold uppercase tracking-widest text-blue">
-              Therapist workspace
+              {labels.workspace}
             </span>
           </Link>
           <BellLink count={notificationCount} />
         </div>
 
-        <NavLinks pendingCount={pendingCount} isActive={isActive} />
+        <NavLinks labels={labels} pendingCount={pendingCount} isActive={isActive} />
         <ProfileLink
           userName={userName}
           userEmail={userEmail}
@@ -236,6 +249,7 @@ export default function TherapistSidebar({
               </div>
 
               <NavLinks
+                labels={labels}
                 pendingCount={pendingCount}
                 onNavigate={closeMenu}
                 isActive={isActive}

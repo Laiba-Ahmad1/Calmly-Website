@@ -8,6 +8,8 @@ export interface IUser extends Document {
   passwordHash: string;
   role: UserRole;
   gender: string;
+  // undefined on pre-existing accounts = treated as verified (migration-safe)
+  emailVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +44,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ["Male", "Female"],
       required: true,
+    },
+    emailVerified: {
+      type: Boolean,
+      // no default: pre-existing accounts stay undefined and are treated as
+      // verified; new signups explicitly set false until they enter their OTP
     },
   },
   {

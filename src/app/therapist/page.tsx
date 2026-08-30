@@ -6,25 +6,23 @@ import { requireTherapist } from "@/lib/therapist/guard";
 import { getTherapistPatients, TherapistPatientSummary } from "@/lib/therapist/patients";
 import { getPendingRequests } from "@/lib/therapist/requests";
 import { getReportsForTherapist } from "@/lib/therapist/reports";
-import {
-  formatDate,
-  formatShortDate,
-  formatWeekRange,
-  timeOfDayGreeting,
-} from "@/lib/format";
+import { formatShortDate, formatWeekRange } from "@/lib/format";
+import { getTherapistT, therapistGreeting } from "@/lib/i18n/server";
+import { interpolate, type TFunction } from "@/lib/i18n/dictionaries";
 
 // Heuristic flags from a patient's LATEST weekly report — explicitly not a
 // live status, just "what the most recent report says".
-function attentionReasons(p: TherapistPatientSummary): string[] {
+function attentionReasons(p: TherapistPatientSummary, t: TFunction): string[] {
   const r = p.latestReport;
   if (!r) return [];
 
   const reasons: string[] = [];
-  if (r.moodTrend === "down") reasons.push("mood average dipped vs the previous week");
-  if (r.sleepTrend === "down") reasons.push("sleep quality dipped vs the previous week");
-  if (r.quizTrend === "up") reasons.push("quiz score suggests more struggle than last week");
-  if (r.journalDays <= 2) reasons.push(`journaled only ${r.journalDays}/7 days`);
-  if (!r.quizCompleted) reasons.push("weekly quiz not completed");
+  if (r.moodTrend === "down") reasons.push(t("t_reason_mood"));
+  if (r.sleepTrend === "down") reasons.push(t("t_reason_sleep"));
+  if (r.quizTrend === "up") reasons.push(t("t_reason_quiz"));
+  if (r.journalDays <= 2)
+    reasons.push(interpolate(t("t_reason_journal"), { days: r.journalDays }));
+  if (!r.quizCompleted) reasons.push(t("t_reason_quiz_missing"));
   return reasons;
 }
 
@@ -32,21 +30,22 @@ export default async function TherapistDashboardPage() {
   const therapist = await requireTherapist();
   if (!therapist) redirect("/login");
 
-  const [patients, requests, reports] = await Promise.all([
+  const [{ language, t }, patients, requests, reports] = await Promise.all([
+    getTherapistT(therapist._id.toString()),
     getTherapistPatients(therapist._id.toString()),
     getPendingRequests(therapist._id.toString()),
     getReportsForTherapist(therapist._id.toString(), 5),
   ]);
 
   const needsAttention = patients
-    .map((p) => ({ patient: p, reasons: attentionReasons(p) }))
+    .map((p) => ({ patient: p, reasons: attentionReasons(p, t) }))
     .filter((x) => x.reasons.length > 0);
 
   return (
     <div>
       <header>
         <p className="font-body text-sm text-text/60">
-          {timeOfDayGreeting()},
+          {therapistGreeting(language)},
         </p>
         <h1 className="mt-1 font-body text-3xl font-extrabold text-heading">
           {therapist.name}
@@ -57,7 +56,7 @@ export default async function TherapistDashboardPage() {
       <dl className="mt-8 flex flex-wrap gap-x-12 gap-y-5 border-y border-blue/25 py-6">
         <div>
           <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-            Active patients
+            {t("t_dash_active_patients")}
           </dt>
           <dd className="mt-1 font-body text-3xl font-extrabold text-heading">
             {patients.length}
@@ -65,7 +64,7 @@ export default async function TherapistDashboardPage() {
         </div>
         <div>
           <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-            Pending requests
+            {t("t_dash_pending_requests")}
           </dt>
           <dd className="mt-1 font-body text-3xl font-extrabold text-heading">
             {requests.length}
@@ -73,7 +72,7 @@ export default async function TherapistDashboardPage() {
         </div>
         <div>
           <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-            Recent reports
+            {t("t_dash_recent_reports")}
           </dt>
           <dd className="mt-1 font-body text-3xl font-extrabold text-heading">
             {reports.length}
@@ -85,7 +84,7 @@ export default async function TherapistDashboardPage() {
               href="/therapist/requests"
               className="font-body text-sm font-semibold text-blue underline-offset-4 hover:underline"
             >
-              Review requests
+              {t("t_dash_review_requests")}
             </Link>
           </div>
         )}
@@ -94,18 +93,17 @@ export default async function TherapistDashboardPage() {
       {/* Patients to review */}
       <section className="mt-10">
         <h2 className="font-body text-lg font-extrabold text-heading">
-          Patients to review
+          {t("t_dash_review_title")}
         </h2>
         <p className="mt-1 font-body text-xs text-text/50">
-          Flagged from the most recent weekly reports — updated weekly, not live
-          monitoring.
+          {t("t_dash_review_desc")}
         </p>
 
         {needsAttention.length === 0 && (
           <p className="mt-4 font-body text-sm text-text/60">
             {patients.length === 0
-              ? "No connected patients yet — accept a patient request to get started."
-              : "Nothing flagged in the latest weekly reports."}
+              ? t("t_dash_no_patients")
+              : t("t_dash_nothing_flagged")}
           </p>
         )}
 
@@ -128,13 +126,15 @@ export default async function TherapistDashboardPage() {
               </div>
               <div className="flex shrink-0 items-center gap-5">
                 <span className="font-body text-xs text-text/50">
-                  Report of {formatShortDate(patient.latestReport!.weekEnd)}
+                  {interpolate(t("t_dash_report_of"), {
+                    date: formatShortDate(patient.latestReport!.weekEnd),
+                  })}
                 </span>
                 <Link
                   href={`/therapist/patients/${patient.patientId}`}
                   className="font-body text-sm font-semibold text-blue hover:underline"
                 >
-                  View patient
+                  {t("t_pd_view_patient")}
                 </Link>
               </div>
             </div>
@@ -146,20 +146,19 @@ export default async function TherapistDashboardPage() {
       <section className="mt-12">
         <div className="flex items-baseline justify-between">
           <h2 className="font-body text-lg font-extrabold text-heading">
-            Recent weekly reports
+            {t("t_dash_reports_title")}
           </h2>
           <Link
             href="/therapist/reports"
             className="font-body text-sm font-semibold text-blue hover:underline"
           >
-            All reports
+            {t("t_dash_all_reports")}
           </Link>
         </div>
 
         {reports.length === 0 ? (
           <p className="mt-4 font-body text-sm text-text/60">
-            No reports yet — the first weekly report appears after a patient
-            completes a full week in Calmly.
+            {t("t_dash_no_reports")}
           </p>
         ) : (
           <div className="mt-4">
@@ -173,8 +172,8 @@ export default async function TherapistDashboardPage() {
                     <p className="font-body font-bold text-heading">
                       {report.patientName}
                       <span className="ml-3 font-body text-xs font-medium text-text/50">
-                        Week {report.weekNumber} ·{" "}
-                        {formatWeekRange(report.weekStart, report.weekEnd)}
+                        {interpolate(t("t_week"), { week: report.weekNumber })}{" "}
+                        · {formatWeekRange(report.weekStart, report.weekEnd)}
                       </span>
                     </p>
                     <p className="mt-1 line-clamp-2 font-body text-sm text-text/70">
@@ -185,7 +184,7 @@ export default async function TherapistDashboardPage() {
                     href={`/therapist/reports/${report.id}`}
                     className="shrink-0 font-body text-sm font-semibold text-blue hover:underline"
                   >
-                    View report
+                    {t("t_reports_view")}
                   </Link>
                 </div>
               </div>
@@ -195,8 +194,7 @@ export default async function TherapistDashboardPage() {
       </section>
 
       <p className="mt-12 border-t border-blue/15 pt-4 font-body text-xs italic text-text/40">
-        Reports summarize logged information from the past week. They are
-        observations for support — not live monitoring and not a diagnosis.
+        {t("t_dash_disclaimer")}
       </p>
     </div>
   );

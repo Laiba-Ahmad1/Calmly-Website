@@ -1,4 +1,6 @@
-// POST /api/auth/signup — create user (defaults to patient role unless invited as therapist)
+// POST /api/auth/signup — create user (defaults to patient role unless invited as therapist).
+// New accounts start unverified: a one-time code is emailed and must be
+// entered before the account can log in.
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import db  from "@/lib/db";
@@ -6,7 +8,14 @@ import User from "@/models/User";
 import  { AnxietyType } from "@/lib/anxiety";
 import PatientProfile from "@/models/PatientProfile";
 import TherapistProfile from "@/models/TherapistProfile";
-import { saveUploadedFile } from "@/lib/uploadFile"; // helper, see below
+import { saveUploadedFile } from "@/lib/uploadFile";
+import {
+  normalizeEmail,
+  validateEmail,
+  validateName,
+  validatePassword,
+} from "@/lib/validation";
+import { issueOtp } from "@/lib/otp";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,16 +23,37 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
 
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const name = (formData.get("name") as string) ?? "";
+    const email = normalizeEmail(formData.get("email"));
+    const password = (formData.get("password") as string) ?? "";
     const role = formData.get("role") as "patient" | "therapist";
     const gender = formData.get("gender") as string;
-
 
     if (!name || !email || !password || !role || !gender) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const nameError = validateName(name);
+    if (nameError) {
+      return NextResponse.json({ error: nameError }, { status: 400 });
+    }
+
+    const emailError = validateEmail(email);
+    if (emailError) {
+      return NextResponse.json({ error: emailError }, { status: 400 });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
+    }
+
+    if (role !== "patient" && role !== "therapist") {
+      return NextResponse.json(
+        { error: "Invalid role" },
         { status: 400 }
       );
     }
@@ -49,11 +79,12 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
+      name: name.trim(),
       email,
       passwordHash,
       role,
       gender,
+      emailVerified: false,
     });
 
     // now branch based on role
@@ -107,6 +138,10 @@ export async function POST(request: NextRequest) {
         verificationStatus: "pending",
       });
     }
+
+    // email a one-time verification code — best-effort: the account exists
+    // and can request a resend if delivery fails
+    await issueOtp(email, "email_verification");
 
     return NextResponse.json(
       {

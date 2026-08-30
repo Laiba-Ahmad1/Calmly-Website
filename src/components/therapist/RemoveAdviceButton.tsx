@@ -4,7 +4,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function RemoveAdviceButton({ adviceId }: { adviceId: string }) {
+export default function RemoveAdviceButton({
+  adviceId,
+  removeLabel,
+  removingLabel,
+}: {
+  adviceId: string;
+  removeLabel: string;
+  removingLabel: string;
+}) {
   const router = useRouter();
   const [removing, setRemoving] = useState(false);
 
@@ -25,7 +33,7 @@ export default function RemoveAdviceButton({ adviceId }: { adviceId: string }) {
       disabled={removing}
       className="font-body text-xs text-text/40 underline-offset-2 transition hover:text-red-500 hover:underline disabled:opacity-50"
     >
-      {removing ? "Removing..." : "Remove"}
+      {removing ? removingLabel : removeLabel}
     </button>
   );
 }

@@ -7,9 +7,11 @@ import { useState } from "react";
 export default function LogoutButton({
   className = "",
   children = "Log out",
+  busyLabel = "Logging out…",
 }: {
   className?: string;
   children?: React.ReactNode;
+  busyLabel?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -31,7 +33,7 @@ export default function LogoutButton({
       disabled={busy}
       className={`font-body text-sm font-semibold text-text/70 transition hover:text-heading disabled:opacity-50 ${className}`}
     >
-      {busy ? "Logging out…" : children}
+      {busy ? busyLabel : children}
     </button>
   );
 }

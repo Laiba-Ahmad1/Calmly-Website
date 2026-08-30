@@ -6,6 +6,8 @@ import { notFound, redirect } from "next/navigation";
 import { requireTherapist } from "@/lib/therapist/guard";
 import { getReportForTherapist } from "@/lib/therapist/reports";
 import { formatDate, formatWeekRange } from "@/lib/format";
+import { getTherapistT } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/dictionaries";
 
 export default async function TherapistReportDetailPage({
   params,
@@ -15,10 +17,10 @@ export default async function TherapistReportDetailPage({
   const therapist = await requireTherapist();
   if (!therapist) redirect("/login");
 
-  const data = await getReportForTherapist(
-    therapist._id.toString(),
-    params.reportId
-  );
+  const [{ t }, data] = await Promise.all([
+    getTherapistT(therapist._id.toString()),
+    getReportForTherapist(therapist._id.toString(), params.reportId),
+  ]);
   if (!data) notFound();
 
   const { report, patientUser } = data;
@@ -42,23 +44,26 @@ export default async function TherapistReportDetailPage({
         href="/therapist/reports"
         className="font-body text-sm text-heading underline-offset-4 hover:underline"
       >
-        ← Reports
+        ← {t("t_reports_title")}
       </Link>
 
       <header className="mt-4">
         <h1 className="font-body text-3xl font-extrabold text-heading">
-          Weekly report — {patientUser.name}
+          {interpolate(t("t_report_title"), { name: patientUser.name })}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">
-          Week {report.weekNumber} · {formatWeekRange(report.weekStart, report.weekEnd)} ·
-          generated {formatDate(report.generatedAt)}
+          {interpolate(t("t_report_week_line"), {
+            week: report.weekNumber,
+            range: formatWeekRange(report.weekStart, report.weekEnd),
+            date: formatDate(report.generatedAt),
+          })}
         </p>
       </header>
 
       <div className="mt-8 flex flex-col gap-10">
         <section>
           <h2 className="font-body text-lg font-extrabold text-heading">
-            Weekly Overview
+            {t("t_report_overview")}
           </h2>
           <p className="mt-2 border-l-2 border-blue/40 pl-4 font-body text-sm leading-relaxed text-text">
             {report.weeklyOverview}
@@ -67,7 +72,7 @@ export default async function TherapistReportDetailPage({
 
         <section>
           <h2 className="font-body text-lg font-extrabold text-heading">
-            Observed Patterns
+            {t("t_report_patterns")}
           </h2>
           <ul className="mt-2 list-disc space-y-1.5 pl-5 font-body text-sm leading-relaxed text-text">
             {report.observedPatterns?.map((pattern: string, i: number) => (
@@ -78,7 +83,7 @@ export default async function TherapistReportDetailPage({
 
         <section>
           <h2 className="font-body text-lg font-extrabold text-heading">
-            Progress
+            {t("t_report_progress")}
           </h2>
           <p className="mt-2 border-l-2 border-blue/40 pl-4 font-body text-sm leading-relaxed text-text">
             {report.progress}
@@ -87,7 +92,7 @@ export default async function TherapistReportDetailPage({
 
         <section>
           <h2 className="font-body text-lg font-extrabold text-heading">
-            Suggested Areas for Therapist Attention
+            {t("t_report_areas")}
           </h2>
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 font-body text-sm leading-relaxed text-text">
             {report.suggestedAreas?.map((area: string, i: number) => (
@@ -98,20 +103,20 @@ export default async function TherapistReportDetailPage({
 
         <section>
           <h2 className="font-body text-lg font-extrabold text-heading">
-            This week&apos;s numbers
+            {t("t_report_numbers")}
           </h2>
           <dl className="mt-3 grid grid-cols-2 gap-x-8 gap-y-4 border-y border-blue/25 py-5 sm:grid-cols-3">
             <div>
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-                Journals
+                {t("t_report_stat_journals")}
               </dt>
               <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
-                {stats.journalDays}/7 days
+                {interpolate(t("t_report_days"), { days: stats.journalDays })}
               </dd>
             </div>
             <div>
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-                Avg mood
+                {t("t_report_stat_mood")}
               </dt>
               <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
                 {stats.moodAvg ?? "—"}/5
@@ -119,7 +124,7 @@ export default async function TherapistReportDetailPage({
             </div>
             <div>
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-                Avg sleep
+                {t("t_report_stat_sleep")}
               </dt>
               <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
                 {stats.sleepAvg ?? "—"}/5
@@ -127,23 +132,25 @@ export default async function TherapistReportDetailPage({
             </div>
             <div>
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-                Weekly quiz
+                {t("t_report_stat_quiz")}
               </dt>
               <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
-                {stats.quizCompleted ? "Completed" : "Not completed"}
+                {stats.quizCompleted
+                  ? t("t_report_completed")
+                  : t("t_report_not_completed")}
               </dd>
             </div>
             <div>
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-                Exercises
+                {t("t_report_stat_exercises")}
               </dt>
               <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
-                {exerciseSummary || "None"}
+                {exerciseSummary || t("t_report_none")}
               </dd>
             </div>
             <div>
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
-                Assigned to-do
+                {t("t_report_stat_task")}
               </dt>
               <dd className="mt-0.5 font-body text-sm font-extrabold leading-snug text-heading">
                 {stats.taskText ? (
@@ -151,12 +158,12 @@ export default async function TherapistReportDetailPage({
                     {stats.taskText}
                     <span className="mt-0.5 block text-xs font-medium text-text/50">
                       {stats.taskCompleted
-                        ? "completed during the week"
-                        : "not completed during the week"}
+                        ? t("t_report_task_completed")
+                        : t("t_report_task_not_completed")}
                     </span>
                   </>
                 ) : (
-                  "None assigned"
+                  t("t_report_none_assigned")
                 )}
               </dd>
             </div>
@@ -165,13 +172,13 @@ export default async function TherapistReportDetailPage({
 
         <div className="flex items-center justify-between">
           <p className="font-body text-xs italic text-text/40">
-            This is a summary of logged information — not a diagnosis.
+            {t("t_report_disclaimer")}
           </p>
           <Link
             href={`/therapist/patients/${report.userId.toString()}`}
             className="font-body text-sm font-semibold text-blue hover:underline"
           >
-            View patient
+            {t("t_pd_view_patient")}
           </Link>
         </div>
       </div>
