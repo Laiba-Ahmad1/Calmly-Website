@@ -7,6 +7,7 @@ import Link from "next/link";
 
 type Role = "patient" | "therapist";
 type AnxietyType = "social" | "health" | "panic attacks" | "general";
+type Gender = "Male" | "Female";
 
 const ANXIETY_OPTIONS: { value: AnxietyType; label: string }[] = [
   { value: "social", label: "Social anxiety" },
@@ -14,6 +15,11 @@ const ANXIETY_OPTIONS: { value: AnxietyType; label: string }[] = [
   { value: "panic attacks", label: "Panic attacks" },
   { value: "general", label: "I don't know" },
   { value: "general", label: "General Anxiety" },
+];
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "Male", label: "Male" },
+  { value: "Female", label: "Female" },
 ];
 
 export default function SignupPage() {
@@ -24,6 +30,8 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [gender, setGender] = useState<Gender | "">("");
+  const [age, setAge] = useState("");
   const [anxietyType, setAnxietyType] = useState<AnxietyType | "">("");
   const [document, setDocument] = useState<File | null>(null);
 
@@ -39,6 +47,14 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
+    if (!gender) {
+      setError("Please select a gender.");
+      return;
+    }
+    if (role === "patient" && !age) {
+      setError("Please enter your age.");
+      return;
+    }
     if (role === "patient" && !anxietyType) {
       setError("Pick what fits best — or choose 'I don't know'.");
       return;
@@ -56,8 +72,12 @@ export default function SignupPage() {
       formData.append("email", email);
       formData.append("password", password);
       formData.append("role", role!);
+      formData.append("gender", gender);
 
-      if (role === "patient") formData.append("anxietyType", anxietyType);
+      if (role === "patient") {
+        formData.append("anxietyType", anxietyType);
+        formData.append("age", age);
+      }
       if (role === "therapist" && document) formData.append("document", document);
 
       const res = await fetch("/api/auth/signup", { method: "POST", body: formData });
@@ -167,6 +187,41 @@ export default function SignupPage() {
                 className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-background">Gender</label>
+              <div className="grid grid-cols-2 gap-2">
+                {GENDER_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setGender(opt.value)}
+                    className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                      gender === opt.value
+                        ? "border-green bg-green/20 text-heading"
+                        : "border-green/30 bg-white text-text/70"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {role === "patient" && (
+              <div>
+                <label className="block text-sm font-medium mb-1 text-background">Age</label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  max={120}
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                />
+              </div>
+            )}
 
             {role === "patient" && (
               <div>

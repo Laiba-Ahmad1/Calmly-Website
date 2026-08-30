@@ -10,7 +10,7 @@ export interface IPatientProfile extends Document {
     growth: number;
     level: number;
   };
-
+  age: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +35,7 @@ const PatientProfileSchema = new Schema<IPatientProfile>(
         type: Number,
         default: 0,
       },
+      age: { type: Number, required: true, min: 1, max: 120 },
 
       level: {
         type: Number,
@@ -44,14 +45,11 @@ const PatientProfileSchema = new Schema<IPatientProfile>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const PatientProfile: Model<IPatientProfile> =
   mongoose.models.PatientProfile ||
-  mongoose.model<IPatientProfile>(
-    "PatientProfile",
-    PatientProfileSchema
-  );
+  mongoose.model<IPatientProfile>("PatientProfile", PatientProfileSchema);
 
 export default PatientProfile;

@@ -18,10 +18,20 @@ export async function POST(request: NextRequest) {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const role = formData.get("role") as "patient" | "therapist";
+    const gender = formData.get("gender") as string;
 
-    if (!name || !email || !password || !role) {
+
+    if (!name || !email || !password || !role || !gender) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const validGenders = ["Male", "Female"];
+    if (!validGenders.includes(gender)) {
+      return NextResponse.json(
+        { error: "Invalid gender" },
         { status: 400 }
       );
     }
@@ -43,13 +53,16 @@ export async function POST(request: NextRequest) {
       email,
       passwordHash,
       role,
+      gender,
     });
 
     // now branch based on role
     if (role === "patient") {
       const rawAnxietyType = formData.get("anxietyType") as string;
+      const rawAge = formData.get("age") as string;
 
       const validAnxietyTypes: AnxietyType[] = ["social", "health", "panic attacks", "general"];
+      const age = Number(rawAge);
 
       if (!validAnxietyTypes.includes(rawAnxietyType as AnxietyType)) {
         await User.findByIdAndDelete(user._id);
@@ -58,12 +71,17 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+      if (!age || age < 1 || age > 120) {
+  await User.findByIdAndDelete(user._id);
+  return NextResponse.json({ error: "Invalid age" }, { status: 400 });
+}
 
       const anxietyType = rawAnxietyType as AnxietyType;
 
       await PatientProfile.create({
         userId: user._id,
         anxietyType,
+          age,
       });
     }
 
