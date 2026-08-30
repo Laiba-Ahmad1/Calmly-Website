@@ -35,13 +35,14 @@ const PatientProfileSchema = new Schema<IPatientProfile>(
         type: Number,
         default: 0,
       },
-      age: { type: Number, required: true, min: 1, max: 120 },
-
+      
       level: {
         type: Number,
         default: 1,
       },
     },
+    age: { type: Number, required: false, min: 1, max: 120 },
+
   },
   {
     timestamps: true,

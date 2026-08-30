@@ -39,7 +39,7 @@ Respond with ONLY the single word "yes" or "no" — no punctuation, no explanati
 
 async function askGemini(prompt: string): Promise<string> {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY_2}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ async function askGroq(prompt: string): Promise<string> {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      Authorization: `Bearer ${process.env.GROQ_API_KEY_2}`,
     },
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",

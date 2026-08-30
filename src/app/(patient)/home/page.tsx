@@ -379,7 +379,7 @@ export default async function Home() {
                 title="Journal"
                 description="Write about your day"
                 disabled={hasJournaledToday}
-                disabledMessage="You already wrote today's journal 🌱"
+                
               />
             </div>
           </div>
