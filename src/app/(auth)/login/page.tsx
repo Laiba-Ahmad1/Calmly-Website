@@ -129,7 +129,7 @@ export default function LoginPage() {
       }
 
       if (data.role === "therapist" && data.verificationStatus !== "approved") {
-        router.push("/therapist/pending");
+        router.push("/pending");
         return;
       }
 
@@ -138,7 +138,7 @@ export default function LoginPage() {
        return;
       }
 
-      router.push(data.role === "therapist" ? "/therapist/dashboard" : "/home");
+      router.push(data.role === "therapist" ? "/dashboard" : "/home");
     } catch {
       setError("Something went wrong. Try again.");
     } finally {
