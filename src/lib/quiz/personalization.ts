@@ -20,46 +20,61 @@ interface GetQuizForUserParams {
   accountCreatedAt: Date;
 }
 
+// The patient's current-week entry point — unchanged behavior.
 export async function getQuizForUser({
   userId,
   anxietyType,
   accountCreatedAt,
 }: GetQuizForUserParams) {
   const weekNumber = getCurrentWeekNumber(accountCreatedAt);
-  const { weekStart, weekEnd } = getWeekWindow(accountCreatedAt, weekNumber);
+  return planQuizForWeek({ userId, anxietyType, accountCreatedAt, targetWeekNumber: weekNumber });
+}
 
-  // Already generated this week's quiz? Return it (idempotent).
+// Plans (or returns the already-planned) quiz for a specific week. The current
+// week is what patients receive; a FUTURE week is what therapists preview and
+// may edit. If the therapist never edits, no future assignment is persisted
+// and the patient gets the AI-planned quiz lazily at week start — the AI
+// personalization system stays the default.
+export async function planQuizForWeek({
+  userId,
+  anxietyType,
+  accountCreatedAt,
+  targetWeekNumber,
+}: GetQuizForUserParams & { targetWeekNumber: number }) {
+  const { weekStart, weekEnd } = getWeekWindow(accountCreatedAt, targetWeekNumber);
+
+  // Already generated (or therapist-edited) for this week? Return it (idempotent).
   const existing = await QuizAssignment.findOne({ userId, weekStart });
   if (existing) {
     const questions = await QuizQuestion.find({
       _id: { $in: existing.questionIds },
       active: true,
     });
-    return { weekNumber, questions, source: existing.source };
+    return { weekNumber: targetWeekNumber, questions, source: existing.source };
   }
 
  const questions =
-    weekNumber === 1
+   targetWeekNumber === 1
       ? await selectBaselineQuestions(anxietyType)
       : await selectPersonalizedQuestions({ userId, anxietyType, weekStart });
 
   if (questions.length === 0) {
     // Don't cache a broken result — next request will retry from scratch instead of being stuck all week
-    console.error(`getQuizForUser: got 0 questions for user ${userId}, week ${weekNumber}`);
-    return { weekNumber, questions: [], source: "none" };
+    console.error(`getQuizForUser: got 0 questions for user ${userId}, week ${targetWeekNumber}`);
+    return { weekNumber: targetWeekNumber, questions: [], source: "none" };
   }
 
   await QuizAssignment.create({
     userId,
     anxietyType,
-    weekNumber,
+    weekNumber: targetWeekNumber,
     weekStart,
     weekEnd,
     questionIds: questions.map((q) => q._id),
-    source: weekNumber === 1 ? "baseline" : "personalized",
+    source: targetWeekNumber === 1 ? "baseline" : "personalized",
   });
 
-  return { weekNumber, questions, source: weekNumber === 1 ? "baseline" : "personalized" };
+  return { weekNumber: targetWeekNumber, questions, source: targetWeekNumber === 1 ? "baseline" : "personalized" };
 }
 
 // ---- Week 1: one question per dimension, seed order, up to 5 ----

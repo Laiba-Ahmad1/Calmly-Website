@@ -22,10 +22,16 @@ export async function callAI(
 
   // --- try Gemini first ---
   try {
-    const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = gemini.getGenerativeModel({ model: "gemini-3.6-flash" });
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens, temperature },
+      // thinking budget pinned to the minimum so reasoning doesn't eat the
+      // output token budget and truncate structured JSON responses
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+        temperature,
+        thinkingConfig: { thinkingBudget: 1 },
+      } as any,
     });
     const text = result.response.text();
     if (text?.trim()) return text.trim();
@@ -36,11 +42,14 @@ export async function callAI(
   // --- fallback: Groq ---
   try {
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-120b",
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens,
       temperature,
-    });
+      // gpt-oss is a reasoning model — keep reasoning short so it doesn't eat
+      // the token budget meant for the actual response
+      reasoning_effort: "low",
+    } as any);
     const text = completion.choices[0]?.message?.content;
     if (text?.trim()) return text.trim();
   } catch (err) {

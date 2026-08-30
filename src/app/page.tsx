@@ -10,7 +10,9 @@ export default async function LandingPage() {
   if (user?.role === "patient") {
     redirect("/home");
   } else if (user?.role === "therapist") {
-    redirect("/dashboard");
+    redirect("/therapist");
+  } else if (user?.role === "admin") {
+    redirect("/admin/therapists");
   }
 
 

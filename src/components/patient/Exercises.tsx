@@ -199,8 +199,13 @@ function PottedPlantScene() {
   );
 }
 
-export default function Exercises() {
-  const [active, setActive] = useState<ExerciseKey | null>(null);
+export default function Exercises({
+  initialExercise = null,
+}: {
+  // set when opened via /exercises?start=... (e.g. from a therapist advice CTA)
+  initialExercise?: ExerciseKey | null;
+}) {
+  const [active, setActive] = useState<ExerciseKey | null>(initialExercise);
   const [completed, setCompleted] = useState<Set<ExerciseKey>>(new Set());
 
   const markDone = (key: ExerciseKey) => {

@@ -26,6 +26,8 @@ export interface IPatientAIReport extends Document {
     quizTotalScore: number | null;
     quizTrend: "up" | "down" | "flat" | null;    // up = more struggle than last week
     exerciseCounts: Record<string, number>;      // e.g. { breathing: 4, sound: 2 }
+    taskText: string | null;                     // therapist-assigned todo active this week, if any
+    taskCompleted: boolean | null;               // completed within this week's window (null = no task)
   };
 
   generatedAt: Date;
@@ -58,6 +60,8 @@ const PatientAIReportSchema = new Schema<IPatientAIReport>(
       quizTotalScore: { type: Number, default: null },
       quizTrend: { type: String, enum: ["up", "down", "flat", null], default: null },
       exerciseCounts: { type: Schema.Types.Mixed, default: {} },
+      taskText: { type: String, default: null },
+      taskCompleted: { type: Boolean, default: null },
     },
 
     generatedAt: { type: Date, default: Date.now },

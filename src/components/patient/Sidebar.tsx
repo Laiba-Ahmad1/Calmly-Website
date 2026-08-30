@@ -5,19 +5,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const NAV_ITEMS = [
-  { href: "/home", icon: "⌂", label: "Home" },
-  { href: "/weekly-report", icon: "▦", label: "Weekly report" },
-  { href: "/therapistFind", icon: "⚕", label: "Therapists" },
-  { href: "/settings", icon: "⚙", label: "Settings" },
-];
+export interface SidebarLabels {
+  home: string;
+  todos: string;
+  feedback: string;
+  therapists: string;
+  settings: string;
+  notifications: string;
+}
+
+const NAV_KEYS = [
+  { href: "/home", icon: "⌂", key: "home" },
+  { href: "/tasks", icon: "✓", key: "todos" },
+  { href: "/feedback", icon: "▦", key: "feedback" },
+  { href: "/therapistFind", icon: "⚕", key: "therapists" },
+  { href: "/settings", icon: "⚙", key: "settings" },
+] as const;
 
 export default function Sidebar({
   userName = "there",
   userEmail = "",
+  labels,
+  notificationCount = 0,
 }: {
   userName?: string;
   userEmail?: string;
+  labels: SidebarLabels;
+  notificationCount?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -39,15 +53,49 @@ export default function Sidebar({
     return () => setMounted(false);
   }, []);
 
+  function BellLink({ onClick }: { onClick?: () => void }) {
+    return (
+      <Link
+        href="/notifications"
+        onClick={onClick}
+        aria-label={labels.notifications}
+        className="relative flex h-8 w-8 items-center justify-center rounded-full text-text/60 transition hover:bg-green/10 hover:text-green"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4.5 w-4.5"
+          width="18"
+          height="18"
+        >
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+        </svg>
+        {notificationCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-green px-1 font-body text-[10px] font-bold text-background">
+            {notificationCount > 9 ? "9+" : notificationCount}
+          </span>
+        )}
+      </Link>
+    );
+  }
+
   return (
     <>
-      <button
-        aria-label="Open menu"
-        onClick={openMenu}
-        className="fixed left-4 top-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-background text-lg shadow-sm transition hover:scale-105"
-      >
-        ☰
-      </button>
+      <div className="fixed left-4 top-4 z-30 flex items-center gap-2">
+        <button
+          aria-label="Open menu"
+          onClick={openMenu}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-background text-lg shadow-sm transition hover:scale-105"
+        >
+          ☰
+        </button>
+        <BellLink />
+      </div>
 
       {open && (
         <>
@@ -67,17 +115,20 @@ export default function Sidebar({
             <div className="flex h-full flex-col rounded-[2rem] border border-white/40 bg-background/90 p-6 shadow-xl backdrop-blur-xl">
               <div className="mb-8 flex items-center justify-between px-1">
                 <span className="font-logo text-2xl text-heading">Calmly</span>
-                <button
-                  aria-label="Close menu"
-                  onClick={closeMenu}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-text/50 transition hover:bg-green/10"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-1">
+                  <BellLink onClick={closeMenu} />
+                  <button
+                    aria-label="Close menu"
+                    onClick={closeMenu}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-text/50 transition hover:bg-green/10"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
 
               <nav className="flex flex-1 flex-col gap-1.5">
-                {NAV_ITEMS.map((item) => {
+                {NAV_KEYS.map((item) => {
                   const active =
                     pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
@@ -99,7 +150,7 @@ export default function Sidebar({
                       >
                         {item.icon}
                       </span>
-                      {item.label}
+                      {labels[item.key]}
                     </Link>
                   );
                 })}

@@ -59,6 +59,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { sleepQualityToNumber, moodToNumber } from "@/lib/journal/mappings";
 import { calculateJournalGrowth } from "@/lib/plant/growth/calculateJournalGrowth";
 import { incrementPlantGrowth } from "@/lib/plant/incrementGrowth";
+import { completeTasksFromJournal } from "@/lib/tasks";
 
 export async function POST(req: NextRequest) {
   try {
@@ -92,8 +93,14 @@ export async function POST(req: NextRequest) {
       sleepQuality: sleepQualityNumber,
       feelings,
       reflection,
-      todos: todos ?? [],
+      todos: (todos ?? []).map((t: { text: string; done: boolean }) => ({
+        text: t.text,
+        done: !!t.done,
+      })),
     });
+
+    // therapist-assigned to-dos checked off in this entry get marked completed
+    await completeTasksFromJournal(user._id, todos ?? [], entry._id);
 
     const growthAwarded = await calculateJournalGrowth({
   mood: moodNumber,

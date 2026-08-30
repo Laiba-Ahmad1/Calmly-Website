@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import { ANXIETY_TYPES, AnxietyType } from "@/lib/anxiety";
+import type { Language } from "@/lib/i18n/dictionaries";
 
 export interface IPatientProfile extends Document {
   userId: mongoose.Types.ObjectId;
@@ -11,6 +12,7 @@ export interface IPatientProfile extends Document {
     level: number;
   };
   age: number;
+  language: Language;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +44,7 @@ const PatientProfileSchema = new Schema<IPatientProfile>(
       },
     },
     age: { type: Number, required: false, min: 1, max: 120 },
+    language: { type: String, enum: ["en", "ur"], default: "en" },
 
   },
   {

@@ -128,17 +128,14 @@ export default function LoginPage() {
         return;
       }
 
-      if (data.role === "therapist" && data.verificationStatus !== "approved") {
-        router.push("/pending");
+      if (data.role === "admin") {
+        router.push("/admin/therapists");
         return;
       }
 
-      if (data.role === "admin") {
-       router.push("/admin/therapists");
-       return;
-      }
-
-      router.push(data.role === "therapist" ? "/dashboard" : "/home");
+      // therapist layout shows a verification screen until the account is
+      // approved — everyone lands on /therapist regardless of status
+      router.push(data.role === "therapist" ? "/therapist" : "/home");
     } catch {
       setError("Something went wrong. Try again.");
     } finally {

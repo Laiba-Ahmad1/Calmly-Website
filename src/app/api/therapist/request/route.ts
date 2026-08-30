@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import db from "@/lib/db";
 import TherapistPatient from "@/models/TherapistPatient";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -27,11 +28,21 @@ export async function POST(req: Request) {
   }
 
   try {
-    await TherapistPatient.create({
+    const relation = await TherapistPatient.create({
       therapistId: therapistUserId,
       patientId: user._id,
       status: "pending",
     });
+
+    await createNotification({
+      recipientId: therapistUserId,
+      type: "patient_request",
+      title: "New patient request",
+      message: `${user.name} would like to work with you.`,
+      link: "/therapist/requests",
+      dedupeKey: `request:${relation._id}`,
+    }).catch(() => null);
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     if (err.code === 11000) {

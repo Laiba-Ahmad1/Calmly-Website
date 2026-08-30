@@ -36,6 +36,12 @@ export async function POST(req: NextRequest) {
     }
 
     const { responses } = await req.json();
+    if (!Array.isArray(responses) || responses.length === 0) {
+      return NextResponse.json(
+        { error: "No answers to submit." },
+        { status: 400 }
+      );
+    }
     const anxietyType = patientProfile.anxietyType;
 
     const questionIds = responses.map((r: any) => r.questionId);

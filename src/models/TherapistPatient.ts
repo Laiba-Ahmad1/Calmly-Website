@@ -27,7 +27,7 @@ const TherapistPatientSchema = new Schema<ITherapistPatient>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
+      // no inline index — the partial unique index below covers patientId lookups
     },
     status: {
       type: String,

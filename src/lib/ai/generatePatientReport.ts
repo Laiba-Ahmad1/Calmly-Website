@@ -5,7 +5,10 @@ import QuizResult from "@/models/QuizResult";
 import ExerciseSession from "@/models/ExerciseSession";
 import PatientAIReport from "@/models/PatientAIReport";
 import PatientProfile from "@/models/PatientProfile";
+import PatientTask from "@/models/PatientTask";
 import Users from "@/models/User";
+import TherapistPatient from "@/models/TherapistPatient";
+import { createNotification } from "@/lib/notifications";
 import { callAI } from "@/lib/quiz/aiClient";
 import { getCurrentWeekNumber, getWeekWindow } from "@/lib/quiz/weeks";
 
@@ -24,7 +27,7 @@ function average(nums: number[]): number | null {
 export async function generatePatientReport(userId: string) {
   await db();
 
-  const user = await Users.findById(userId).select("createdAt");
+  const user = await Users.findById(userId).select("name createdAt");
   const patientProfile = await PatientProfile.findOne({ userId });
   if (!user || !patientProfile) return null;
 
@@ -37,7 +40,7 @@ export async function generatePatientReport(userId: string) {
   const existing = await PatientAIReport.findOne({ userId, weekStart });
   if (existing) return existing;
 
-  const [journalEntries, quizResult, exerciseSessions, previousReport] = await Promise.all([
+  const [journalEntries, quizResult, exerciseSessions, previousReport, weekTasks] = await Promise.all([
     Journal.find({ patientId: userId, date: { $gte: weekStart, $lt: weekEnd } })
       .sort({ date: 1 })
       .select("date mood sleepQuality feelings reflection"),
@@ -50,9 +53,17 @@ export async function generatePatientReport(userId: string) {
           weekStart: getWeekWindow(new Date(user.createdAt), targetWeek - 1).weekStart,
         })
       : null,
+    // therapist-assigned todo that was active at any point during the week
+    PatientTask.find({
+      patientId: userId,
+      assignedAt: { $lt: weekEnd },
+      $or: [{ completedAt: null }, { completedAt: { $gte: weekStart } }],
+    })
+      .sort({ assignedAt: -1 })
+      .lean(),
   ]);
 
-  if (!journalEntries.length && !quizResult && !exerciseSessions.length) {
+  if (!journalEntries.length && !quizResult && !exerciseSessions.length && !weekTasks.length) {
     return null; // nothing happened this week — don't generate an empty/invented report
   }
 
@@ -66,6 +77,15 @@ export async function generatePatientReport(userId: string) {
     exerciseCounts[session.type] = (exerciseCounts[session.type] ?? 0) + 1;
   }
 
+  // most recently assigned task relevant to this week (may be undefined)
+  const weekTask = weekTasks[0];
+  const taskText = weekTask?.text ?? null;
+  const taskCompleted = weekTask
+    ? weekTask.completedAt != null &&
+      weekTask.completedAt >= weekStart &&
+      weekTask.completedAt < weekEnd
+    : null;
+
   const stats = {
     journalDays,
     moodAvg,
@@ -76,6 +96,8 @@ export async function generatePatientReport(userId: string) {
     quizTotalScore: quizResult?.totalScore ?? null,
     quizTrend: trend(quizResult?.totalScore ?? null, previousReport?.stats.quizTotalScore ?? null),
     exerciseCounts,
+    taskText,
+    taskCompleted,
   };
 
   // ---- Build AI prompt, handing it the real numbers to narrate around ----
@@ -102,6 +124,7 @@ Computed stats for this week:
 - Average sleep quality: ${stats.sleepAvg ?? "no data"}/5 (trend vs last week: ${stats.sleepTrend ?? "no prior data"})
 - Quiz: ${stats.quizCompleted ? `completed, total score ${stats.quizTotalScore} (trend vs last week: ${stats.quizTrend ?? "no prior data"})` : "not completed"}
 - Exercises completed: ${Object.entries(stats.exerciseCounts).map(([type, count]) => `${type}: ${count}`).join(", ") || "none"}
+- Therapist-assigned task: ${stats.taskText ? `"${stats.taskText}" (${stats.taskCompleted ? "completed during the week" : "not completed during the week"})` : "none assigned"}
 
 Patient's anxiety type: ${patientProfile.anxietyType}
 
@@ -111,7 +134,7 @@ ${journalText}
 Quiz detail:
 ${quizText}
 
-Write a report with these exact four sections. For "observedPatterns", weave in the computed stats above verbatim where relevant, plus any qualitative patterns you notice in the journal text (recurring topics, timing, triggers) — but never state a number that isn't in the computed stats above.
+Write a report with these exact four sections. For "observedPatterns", weave in the computed stats above verbatim where relevant, plus any qualitative patterns you notice in the journal text (recurring topics, timing, triggers) — but never state a number that isn't in the computed stats above. If a therapist-assigned task is present, you may note observationally how it relates to the patient's week (e.g. whether journal entries mention it or an exercise pattern matches it).
 
 Respond as ONLY a JSON object in this exact shape, no markdown fences, no extra text:
 {
@@ -122,7 +145,7 @@ Respond as ONLY a JSON object in this exact shape, no markdown fences, no extra 
   "strugglingDimensions": ["dimension1", "dimension2"]
 }`;
 
-  const raw = await callAI(prompt, { maxTokens: 900, temperature: 0.4 });
+  const raw = await callAI(prompt, { maxTokens: 1600, temperature: 0.4 });
   if (!raw) return null;
 
   let parsed: {
@@ -155,6 +178,32 @@ Respond as ONLY a JSON object in this exact shape, no markdown fences, no extra 
       : {},
     stats,
   });
+
+  // Notify every actively connected therapist that the report is ready.
+  // Best-effort: notification problems never fail report generation.
+  try {
+    const relations = await TherapistPatient.find({
+      patientId: userId,
+      status: "active",
+    })
+      .select("therapistId")
+      .lean();
+
+    await Promise.all(
+      relations.map((rel) =>
+        createNotification({
+          recipientId: rel.therapistId,
+          type: "weekly_report",
+          title: "Weekly report ready",
+          message: `${user.name}'s weekly report for week ${targetWeek} is ready to review.`,
+          link: `/therapist/reports/${report._id}`,
+          dedupeKey: `report:${userId}:${weekStart.getTime()}`,
+        })
+      )
+    );
+  } catch (err) {
+    console.error("Failed to notify therapists of new report:", err);
+  }
 
   return report;
 }

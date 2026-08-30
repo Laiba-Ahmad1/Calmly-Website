@@ -28,12 +28,8 @@ const MOOD_OPTIONS: { value: Mood; emoji: string; label: string }[] = [
   { value: "happy", emoji: "😄", label: "Happy" },
 ];
 
-// TODO: replace with real assignments once therapist-side task assignment exists.
-const MOCK_TODOS: TodoItem[] = [
-  { id: "1", text: "Practice the 4-7-8 breathing exercise before bed", done: false },
-  { id: "2", text: "Write down one thing that went well today", done: false },
-  { id: "3", text: "Take a 10 minute walk outside", done: false },
-];
+// Real to-dos come from /api/tasks (therapist-assigned PatientTasks).
+// todo.id is the PatientTask _id so the submit route can mark completions.
 
 export default function JournalForm() {
   const router = useRouter();
@@ -41,7 +37,8 @@ export default function JournalForm() {
   const [feelings, setFeelings] = useState("");
   const [sleepQuality, setSleepQuality] = useState<SleepQuality | null>(null);
   const [mood, setMood] = useState<Mood | null>(null);
-  const [todos, setTodos] = useState<TodoItem[]>(MOCK_TODOS);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [todosLoaded, setTodosLoaded] = useState(false);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -59,6 +56,17 @@ export default function JournalForm() {
       .catch(() => {
         // history fetch failing shouldn't block journaling — keep default greeting
       });
+
+    fetch("/api/tasks")
+      .then((res) => res.json())
+      .then((data) => {
+        const tasks = (data.tasks ?? []) as { id: string; text: string }[];
+        setTodos(tasks.map((t) => ({ id: t.id, text: t.text, done: false })));
+      })
+      .catch(() => {
+        // no to-dos is a normal state — the section just shows its empty text
+      })
+      .finally(() => setTodosLoaded(true));
   }, []);
 
   function toggleTodo(id: string) {
@@ -90,7 +98,8 @@ export default function JournalForm() {
           feelings,
           sleepQuality,
           mood,
-          todos: todos.map((t) => ({ text: t.text, done: t.done })),
+          // taskId lets the backend mark therapist tasks completed when checked
+          todos: todos.map((t) => ({ taskId: t.id, text: t.text, done: t.done })),
         }),
       });
 
@@ -216,6 +225,13 @@ export default function JournalForm() {
                 To-do
               </label>
               <div className="flex flex-col gap-1 rounded-2xl border border-green/30 bg-green/5 p-3">
+                {todos.length === 0 && (
+                  <p className="p-2 font-body text-sm text-text/50">
+                    {todosLoaded
+                      ? "Your therapist hasn't assigned a to-do yet."
+                      : "Loading your to-dos…"}
+                  </p>
+                )}
                 {todos.map((todo) => (
                   <button
                     key={todo.id}

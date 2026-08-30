@@ -16,7 +16,8 @@ export async function getAssignedPatient(therapistId: string, patientId: string)
   if (!assignment) return null; // not assigned — caller should treat this as "not found," not "forbidden"
 
   const [patientUser, patientProfile] = await Promise.all([
-    Users.findById(patientId).select("name email"),
+    // createdAt is needed by callers to anchor the patient's week windows
+    Users.findById(patientId).select("name email createdAt"),
     PatientProfile.findOne({ userId: patientId }),
   ]);
 

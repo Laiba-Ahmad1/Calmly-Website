@@ -77,7 +77,12 @@ Respond with ONLY the question text. No quotes, no JSON, no preamble.`;
   if (!raw) return null;
 
   const questionText = raw.trim().replace(/^["']|["']$/g, "");
-  if (!questionText || questionText.length < 10) return null;
+  // Reasoning models sometimes burn the token budget mid-sentence and return
+  // fragments like "How often did you". Reject anything that isn't a complete
+  // question so the caller falls back to the shared question bank.
+  if (!questionText || questionText.length < 20 || !questionText.endsWith("?")) {
+    return null;
+  }
 
   const created = await QuizQuestion.create({
     question: questionText,

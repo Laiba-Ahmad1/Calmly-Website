@@ -10,7 +10,7 @@ export interface IQuizAssignment extends Document {
   weekEnd: Date;
   questionIds: mongoose.Types.ObjectId[];
   dimensionWeights: Map<string, number>; // snapshot of what drove the picks, for debugging/therapist view
-  source: "baseline" | "personalized";
+  source: "baseline" | "personalized" | "therapist";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,7 +24,7 @@ const QuizAssignmentSchema = new Schema<IQuizAssignment>(
     weekEnd: { type: Date, required: true },
     questionIds: [{ type: Schema.Types.ObjectId, ref: "QuizQuestion", required: true }],
     dimensionWeights: { type: Map, of: Number, default: {} },
-    source: { type: String, enum: ["baseline", "personalized"], required: true },
+    source: { type: String, enum: ["baseline", "personalized", "therapist"], required: true },
   },
   { timestamps: true }
 );

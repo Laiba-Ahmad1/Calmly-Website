@@ -1,6 +1,9 @@
 import cloudinary from "./cloudinary";
 
-export async function saveUploadedFile(file: File): Promise<string> {
+export async function saveUploadedFile(
+  file: File,
+  folder = "calmly/therapist-docs"
+): Promise<string> {
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
@@ -8,7 +11,7 @@ export async function saveUploadedFile(file: File): Promise<string> {
   const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "calmly/therapist-docs", // keeps uploads organized in your Cloudinary account
+        folder, // keeps uploads organized in your Cloudinary account
         resource_type: "auto", // handles PDFs, images, etc. automatically
       },
       (error, result) => {
