@@ -111,11 +111,14 @@ export default async function TherapistLayout({
     workspace: t("t_workspace"),
   };
 
-  return (
+    return (
     <div
       dir={language === "ur" ? "rtl" : "ltr"}
-      className="relative min-h-screen bg-bluesoft"
+      className="relative min-h-screen overflow-hidden bg-blue"
     >
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/10" />
+      <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-white/10" />
+
       <TherapistSidebar
         userName={user.name}
         userEmail={user.email}
@@ -126,7 +129,7 @@ export default async function TherapistLayout({
       />
 
       {/* pt-20 clears the fixed menu button on mobile */}
-      <main className="relative p-6 pt-20 sm:p-10 lg:pl-80 lg:pt-10">
+      <main className="relative p-6 pt-20 sm:p-10">
         <div className="mx-auto max-w-4xl">{children}</div>
       </main>
     </div>

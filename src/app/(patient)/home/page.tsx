@@ -138,7 +138,7 @@ export default async function Home() {
               <div className="rounded-full bg-green/10 px-6 py-4 text-center">
                 <p className="text-xs opacity-60">{t("home_next_growth")}</p>
                 <p className="font-body text-lg font-extrabold text-heading">
-                  {patientProfile.plant.level + 1}
+                  stage {patientProfile.plant.level + 1}
                 </p>
               </div>
             </div>

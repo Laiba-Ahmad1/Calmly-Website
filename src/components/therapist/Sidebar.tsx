@@ -1,3 +1,4 @@
+
 // src/components/therapist/Sidebar.tsx
 "use client";
 
@@ -183,8 +184,8 @@ export default function TherapistSidebar({
 
   return (
     <>
-      {/* Mobile: menu + notifications buttons */}
-      <div className="fixed left-4 top-4 z-30 flex items-center gap-2 lg:hidden">
+      {/* Menu + notifications buttons — always the hamburger, on every screen size */}
+      <div className="fixed left-4 top-4 z-30 flex items-center gap-2">
         <button
           aria-label="Open menu"
           onClick={openMenu}
@@ -192,32 +193,9 @@ export default function TherapistSidebar({
         >
           ☰
         </button>
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-background shadow-sm">
-          <BellLink count={notificationCount} />
-        </div>
+        <BellLink count={notificationCount} />
       </div>
 
-      {/* Desktop: persistent sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-blue/20 bg-background p-6 lg:flex">
-        <div className="mb-8 flex items-start justify-between px-1">
-          <Link href="/therapist">
-            <span className="font-logo text-2xl text-heading">Calmly</span>
-            <span className="mt-0.5 block font-body text-[11px] font-semibold uppercase tracking-widest text-blue">
-              {labels.workspace}
-            </span>
-          </Link>
-          <BellLink count={notificationCount} />
-        </div>
-
-        <NavLinks labels={labels} pendingCount={pendingCount} isActive={isActive} />
-        <ProfileLink
-          userName={userName}
-          userEmail={userEmail}
-          avatarUrl={avatarUrl}
-        />
-      </aside>
-
-      {/* Mobile: drawer */}
       {open && (
         <>
           <div

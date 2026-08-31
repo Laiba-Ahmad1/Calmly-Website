@@ -42,13 +42,13 @@ export default async function TherapistReportDetailPage({
     <div>
       <Link
         href="/therapist/reports"
-        className="font-body text-sm text-heading underline-offset-4 hover:underline"
+        className="font-body text-sm text-blueheading underline-offset-4 hover:underline"
       >
         ← {t("t_reports_title")}
       </Link>
 
       <header className="mt-4">
-        <h1 className="font-body text-3xl font-extrabold text-heading">
+        <h1 className="font-body text-3xl font-extrabold text-blueheading">
           {interpolate(t("t_report_title"), { name: patientUser.name })}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">
@@ -62,7 +62,7 @@ export default async function TherapistReportDetailPage({
 
       <div className="mt-8 flex flex-col gap-10">
         <section>
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_report_overview")}
           </h2>
           <p className="mt-2 border-l-2 border-blue/40 pl-4 font-body text-sm leading-relaxed text-text">
@@ -71,7 +71,7 @@ export default async function TherapistReportDetailPage({
         </section>
 
         <section>
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_report_patterns")}
           </h2>
           <ul className="mt-2 list-disc space-y-1.5 pl-5 font-body text-sm leading-relaxed text-text">
@@ -82,7 +82,7 @@ export default async function TherapistReportDetailPage({
         </section>
 
         <section>
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_report_progress")}
           </h2>
           <p className="mt-2 border-l-2 border-blue/40 pl-4 font-body text-sm leading-relaxed text-text">
@@ -91,7 +91,7 @@ export default async function TherapistReportDetailPage({
         </section>
 
         <section>
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_report_areas")}
           </h2>
           <ol className="mt-2 list-decimal space-y-1.5 pl-5 font-body text-sm leading-relaxed text-text">
@@ -102,7 +102,7 @@ export default async function TherapistReportDetailPage({
         </section>
 
         <section>
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_report_numbers")}
           </h2>
           <dl className="mt-3 grid grid-cols-2 gap-x-8 gap-y-4 border-y border-blue/25 py-5 sm:grid-cols-3">
@@ -110,7 +110,7 @@ export default async function TherapistReportDetailPage({
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
                 {t("t_report_stat_journals")}
               </dt>
-              <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
+              <dd className="mt-0.5 font-body text-lg font-extrabold text-blueheading">
                 {interpolate(t("t_report_days"), { days: stats.journalDays })}
               </dd>
             </div>
@@ -118,7 +118,7 @@ export default async function TherapistReportDetailPage({
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
                 {t("t_report_stat_mood")}
               </dt>
-              <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
+              <dd className="mt-0.5 font-body text-lg font-extrabold text-blueheading">
                 {stats.moodAvg ?? "—"}/5
               </dd>
             </div>
@@ -126,7 +126,7 @@ export default async function TherapistReportDetailPage({
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
                 {t("t_report_stat_sleep")}
               </dt>
-              <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
+              <dd className="mt-0.5 font-body text-lg font-extrabold text-blueheading">
                 {stats.sleepAvg ?? "—"}/5
               </dd>
             </div>
@@ -134,7 +134,7 @@ export default async function TherapistReportDetailPage({
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
                 {t("t_report_stat_quiz")}
               </dt>
-              <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
+              <dd className="mt-0.5 font-body text-lg font-extrabold text-blueheading">
                 {stats.quizCompleted
                   ? t("t_report_completed")
                   : t("t_report_not_completed")}
@@ -144,7 +144,7 @@ export default async function TherapistReportDetailPage({
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
                 {t("t_report_stat_exercises")}
               </dt>
-              <dd className="mt-0.5 font-body text-lg font-extrabold text-heading">
+              <dd className="mt-0.5 font-body text-lg font-extrabold text-blueheading">
                 {exerciseSummary || t("t_report_none")}
               </dd>
             </div>
@@ -152,7 +152,7 @@ export default async function TherapistReportDetailPage({
               <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
                 {t("t_report_stat_task")}
               </dt>
-              <dd className="mt-0.5 font-body text-sm font-extrabold leading-snug text-heading">
+              <dd className="mt-0.5 font-body text-sm font-extrabold leading-snug text-blueheading">
                 {stats.taskText ? (
                   <>
                     {stats.taskText}

@@ -18,9 +18,9 @@ export default async function TherapistReportsPage() {
   ]);
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <header>
-        <h1 className="font-body text-3xl font-extrabold text-heading">
+        <h1 className="font-body text-3xl font-extrabold text-blueheading">
           {t("t_reports_title")}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">
@@ -42,7 +42,7 @@ export default async function TherapistReportsPage() {
               className="flex flex-col gap-2 border-b border-blue/15 py-5 sm:flex-row sm:items-baseline sm:justify-between"
             >
               <div className="min-w-0">
-                <p className="font-body font-bold text-heading">
+                <p className="font-body font-bold text-blueheading">
                   {report.patientName}
                 </p>
                 <p className="mt-0.5 font-body text-xs text-text/50">

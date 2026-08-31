@@ -7,21 +7,18 @@ import { useEffect, useState } from "react";
 
 export interface SidebarLabels {
   home: string;
-  journal: string;
-  journals: string;
-  todos: string;
   feedback: string;
+  tasks: string;
   therapists: string;
+ 
   settings: string;
   notifications: string;
 }
 
 const NAV_KEYS = [
   { href: "/home", icon: "⌂", key: "home" },
-  { href: "/journal", icon: "✎", key: "journal" },
-  { href: "/journals", icon: "☰", key: "journals" },
-  { href: "/tasks", icon: "✓", key: "todos" },
   { href: "/feedback", icon: "▦", key: "feedback" },
+  { href: "/tasks", icon: "☑", key: "tasks" },
   { href: "/therapistFind", icon: "⚕", key: "therapists" },
   { href: "/settings", icon: "⚙", key: "settings" },
 ] as const;

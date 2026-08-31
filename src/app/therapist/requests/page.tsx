@@ -24,9 +24,9 @@ export default async function TherapistRequestsPage() {
   }));
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <header>
-        <h1 className="font-body text-3xl font-extrabold text-heading">
+        <h1 className="font-body text-3xl font-extrabold text-blueheading">
           {t("t_req_title")}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">

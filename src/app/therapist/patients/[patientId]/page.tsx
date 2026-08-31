@@ -38,11 +38,11 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div>
+    <div className="">
       <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
         {label}
       </dt>
-      <dd className="mt-1 font-body text-xl font-extrabold text-heading">{value}</dd>
+      <dd className="mt-1 font-body text-xl font-extrabold text-blueheading">{value}</dd>
       {hint && <p className="mt-0.5 font-body text-xs text-text/50">{hint}</p>}
     </div>
   );
@@ -188,16 +188,16 @@ export default async function TherapistPatientDetailPage({
   };
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <Link
         href="/therapist/patients"
-        className="font-body text-sm text-heading underline-offset-4 hover:underline"
+        className="font-body text-sm text-blueheading underline-offset-4 hover:underline"
       >
         ← {t("t_nav_patients")}
       </Link>
 
       <header className="mt-4">
-        <h1 className="font-body text-3xl font-extrabold text-heading">
+        <h1 className="font-body text-3xl font-extrabold text-blueheading">
           {patientUser.name}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">
@@ -224,7 +224,7 @@ export default async function TherapistPatientDetailPage({
       {/* This week */}
       <section className="mt-8">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_pd_this_week")}
           </h2>
           <p className="font-body text-xs text-text/50">
@@ -300,7 +300,7 @@ export default async function TherapistPatientDetailPage({
 
       {/* Assigned to-dos */}
       <section className="mt-10">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_pd_tasks_title")}
         </h2>
         <p className="mt-1 font-body text-xs text-text/50">
@@ -356,7 +356,7 @@ export default async function TherapistPatientDetailPage({
 
       {/* Advice */}
       <section className="mt-12">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_pd_advice_title")}
         </h2>
         <p className="mt-1 font-body text-xs text-text/50">
@@ -407,7 +407,7 @@ export default async function TherapistPatientDetailPage({
 
       {/* Weekly feedback */}
       <section className="mt-12">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_pd_feedback_title")}
         </h2>
         <FeedbackForm
@@ -455,7 +455,7 @@ export default async function TherapistPatientDetailPage({
       {/* Upcoming quiz review */}
       {upcomingQuiz && upcomingQuiz.ok && upcomingQuiz.questions.length > 0 && (
         <section className="mt-12">
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_pd_quiz_title")}
           </h2>
           <QuizReviewForm
@@ -471,7 +471,7 @@ export default async function TherapistPatientDetailPage({
       {/* Latest weekly report */}
       <section className="mt-12">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_pd_latest_report")}
           </h2>
           {latestReport && (
@@ -520,7 +520,7 @@ export default async function TherapistPatientDetailPage({
 
       {/* Recent journals */}
       <section className="mt-10">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_pd_journals_title")}
         </h2>
 
@@ -547,7 +547,7 @@ export default async function TherapistPatientDetailPage({
                   })}
                 </p>
                 <p className="mt-2 font-body text-sm leading-relaxed text-text">
-                  <span className="font-bold text-heading">
+                  <span className="font-bold text-blueheading">
                     {t("t_pd_feelings")}
                   </span>{" "}
                   — {entry.feelings}

@@ -55,21 +55,21 @@ export default async function TherapistProfilePage() {
   };
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <header>
-        <h1 className="font-body text-3xl font-extrabold text-heading">
+        <h1 className="font-body text-3xl font-extrabold text-blueheading">
           {therapist.name}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">{therapist.email}</p>
 
-        <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue/15 px-4 py-1.5 font-body text-xs font-semibold text-heading">
+        <span className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue/15 px-4 py-1.5 font-body text-xs font-semibold text-blueheading">
           <span className="h-2 w-2 rounded-full bg-blue" />
           {t("t_profile_verified")}
         </span>
       </header>
 
       <section className="mt-8">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_profile_edit")}
         </h2>
         <TherapistProfileEditForm
@@ -82,7 +82,7 @@ export default async function TherapistProfilePage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_profile_about")}
         </h2>
         <p className="mt-3 font-body text-sm leading-relaxed text-text/80">
@@ -93,7 +93,7 @@ export default async function TherapistProfilePage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_profile_account")}
         </h2>
         <dl className="mt-2">

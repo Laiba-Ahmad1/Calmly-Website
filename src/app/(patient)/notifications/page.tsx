@@ -49,7 +49,7 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div className="relative mx-auto max-w-2xl">
+    <div className="relative mx-auto max-w-2xl rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <h1 className="font-body text-3xl font-extrabold text-heading">
         {t("notifications_title")}
       </h1>

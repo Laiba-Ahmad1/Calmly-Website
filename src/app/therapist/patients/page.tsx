@@ -18,9 +18,9 @@ export default async function TherapistPatientsPage() {
   ]);
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <header>
-        <h1 className="font-body text-3xl font-extrabold text-heading">
+        <h1 className="font-body text-3xl font-extrabold text-blueheading">
           {t("t_patients_title")}
         </h1>
         <p className="mt-2 font-body text-sm text-text/60">
@@ -57,7 +57,7 @@ export default async function TherapistPatientsPage() {
               <div className="min-w-0">
                 <Link
                   href={`/therapist/patients/${patient.patientId}`}
-                  className="font-body font-bold text-heading hover:underline"
+                  className="font-body font-bold text-blueheading hover:underline"
                 >
                   {patient.name}
                 </Link>

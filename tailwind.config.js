@@ -20,6 +20,7 @@ module.exports = {
         blue: "rgb(var(--color-blue) / <alpha-value>)",
         bluesoft: "rgb(var(--color-bluesoft) / <alpha-value>)",
         canvas: "rgb(var(--color-canvas) / <alpha-value>)",
+        blueheading: "rgb(var(--color-blueheading) / <alpha-value>)",
         authbg: "rgb(var(--color-authbg) / <alpha-value>)",
 
         button: "var(--button-clr)",

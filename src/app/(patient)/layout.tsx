@@ -33,10 +33,8 @@ export default async function PatientLayout({
   const t = tFor(language);
   const labels = {
     home: t("nav_home"),
-    journal: t("nav_journal"),
-    journals: t("nav_journals"),
-    todos: t("nav_todos"),
     feedback: t("nav_feedback"),
+    tasks: t("Tasks"),
     therapists: t("nav_therapists"),
     settings: t("nav_settings"),
     notifications: t("nav_notifications"),

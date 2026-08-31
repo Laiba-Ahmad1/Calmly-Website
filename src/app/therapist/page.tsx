@@ -1,3 +1,4 @@
+
 // src/app/therapist/page.tsx
 // Therapist dashboard — "How are my patients doing?" based on weekly reports.
 import Link from "next/link";
@@ -42,12 +43,12 @@ export default async function TherapistDashboardPage() {
     .filter((x) => x.reasons.length > 0);
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <header>
         <p className="font-body text-sm text-text/60">
           {therapistGreeting(language)},
         </p>
-        <h1 className="mt-1 font-body text-3xl font-extrabold text-heading">
+        <h1 className="mt-1 font-body text-3xl font-extrabold text-blueheading">
           {therapist.name}
         </h1>
       </header>
@@ -58,7 +59,7 @@ export default async function TherapistDashboardPage() {
           <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
             {t("t_dash_active_patients")}
           </dt>
-          <dd className="mt-1 font-body text-3xl font-extrabold text-heading">
+          <dd className="mt-1 font-body text-3xl font-extrabold text-blueheading">
             {patients.length}
           </dd>
         </div>
@@ -66,7 +67,7 @@ export default async function TherapistDashboardPage() {
           <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
             {t("t_dash_pending_requests")}
           </dt>
-          <dd className="mt-1 font-body text-3xl font-extrabold text-heading">
+          <dd className="mt-1 font-body text-3xl font-extrabold text-blueheading">
             {requests.length}
           </dd>
         </div>
@@ -74,7 +75,7 @@ export default async function TherapistDashboardPage() {
           <dt className="font-body text-xs font-semibold uppercase tracking-wide text-text/50">
             {t("t_dash_recent_reports")}
           </dt>
-          <dd className="mt-1 font-body text-3xl font-extrabold text-heading">
+          <dd className="mt-1 font-body text-3xl font-extrabold text-blueheading">
             {reports.length}
           </dd>
         </div>
@@ -92,7 +93,7 @@ export default async function TherapistDashboardPage() {
 
       {/* Patients to review */}
       <section className="mt-10">
-        <h2 className="font-body text-lg font-extrabold text-heading">
+        <h2 className="font-body text-lg font-extrabold text-blueheading">
           {t("t_dash_review_title")}
         </h2>
         <p className="mt-1 font-body text-xs text-text/50">
@@ -116,7 +117,7 @@ export default async function TherapistDashboardPage() {
               <div className="min-w-0">
                 <Link
                   href={`/therapist/patients/${patient.patientId}`}
-                  className="font-body font-bold text-heading hover:underline"
+                  className="font-body font-bold text-blueheading hover:underline"
                 >
                   {patient.name}
                 </Link>
@@ -145,7 +146,7 @@ export default async function TherapistDashboardPage() {
       {/* Recent weekly reports */}
       <section className="mt-12">
         <div className="flex items-baseline justify-between">
-          <h2 className="font-body text-lg font-extrabold text-heading">
+          <h2 className="font-body text-lg font-extrabold text-blueheading">
             {t("t_dash_reports_title")}
           </h2>
           <Link
@@ -169,7 +170,7 @@ export default async function TherapistDashboardPage() {
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
                   <div className="min-w-0">
-                    <p className="font-body font-bold text-heading">
+                    <p className="font-body font-bold text-blueheading">
                       {report.patientName}
                       <span className="ml-3 font-body text-xs font-medium text-text/50">
                         {interpolate(t("t_week"), { week: report.weekNumber })}{" "}
