@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
   useEffect(() => {
@@ -100,10 +101,10 @@ export default function LoginPage() {
           />
         </div>
 
-        <div>
+        <div className="relative">
           <label className="block text-sm font-semibold mb-1 text-background">Password</label>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             required
             maxLength={128}
             value={password}
@@ -111,8 +112,15 @@ export default function LoginPage() {
             placeholder="Enter your password"
             className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute right-3 top-9 text-gray-500 text-sm"
+          >
+            {showPassword ? "⌣" : "👁"}
+          </button>
         </div>
-
+        
 
         {notice && <p className="text-sm text-heading">{notice}</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -124,7 +132,7 @@ export default function LoginPage() {
           className="w-full text-green disabled:opacity-60"
         >
           {loading ? "Logging in..." : "Log in"}
-          {loginSuccess && " ✅"}
+          {loginSuccess && " ✔"}
         </Button>
 
         <p className="text-center text-sm text-background/70">

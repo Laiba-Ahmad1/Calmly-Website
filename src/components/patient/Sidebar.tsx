@@ -10,7 +10,7 @@ export interface SidebarLabels {
   feedback: string;
   tasks: string;
   therapists: string;
- 
+  guide: string;
   settings: string;
   notifications: string;
 }
@@ -20,6 +20,7 @@ const NAV_KEYS = [
   { href: "/feedback", icon: "▦", key: "feedback" },
   { href: "/tasks", icon: "☑", key: "tasks" },
   { href: "/therapistFind", icon: "⚕", key: "therapists" },
+  { href: "/guide", icon: "🕮", key: "guide" },
   { href: "/settings", icon: "⚙", key: "settings" },
 ] as const;
 

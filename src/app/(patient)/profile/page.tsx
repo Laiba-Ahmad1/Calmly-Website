@@ -29,7 +29,7 @@ export default async function PatientProfilePage() {
   const { t } = await getPatientT(user._id.toString());
 
   return (
-    <div className="relative mx-auto max-w-2xl">
+    <div className="relative mx-auto max-w-2xl rounded-[2rem] bg-background p-6 shadow-sm sm:p-10 ">
       <h1 className="font-body text-3xl font-extrabold text-heading">
         {t("profile_title")}
       </h1>

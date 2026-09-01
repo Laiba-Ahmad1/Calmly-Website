@@ -37,6 +37,7 @@ export default async function PatientLayout({
     tasks: t("Tasks"),
     therapists: t("nav_therapists"),
     settings: t("nav_settings"),
+    guide: t("Guide to Calmly"),
     notifications: t("nav_notifications"),
   };
 

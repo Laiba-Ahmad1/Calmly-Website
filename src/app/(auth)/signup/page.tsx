@@ -223,7 +223,7 @@ export default function SignupPage() {
             onClick={() => setShowPassword((s) => !s)}
             className="absolute right-3 top-9 text-gray-500 text-sm"
           >
-            {showPassword ? "Hide" : "Show"}
+             {showPassword ? "⌣" : "👁"}
           </button>
               <p className="mt-1 text-xs text-background/60">
                 At least 8 characters, with a letter and a number.

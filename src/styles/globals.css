@@ -42,8 +42,9 @@
   --color-lavendersoft: 47 42 58;    /* deep plum-gray surface */
   --color-peach: 224 158 138;        /* warmed, lifted peach accent */
   --color-peachsoft: 54 40 36;       /* deep warm brown surface */
-  --color-blue: 150 190 204;         /* lifted dusty blue accent */
-  --color-bluesoft: 30 42 46;   
+  --color-blue: 88 146 168;        /* deep slate-blue accent — richer, more saturated than light mode's dusty blue */
+--color-bluesoft: 22 34 40;      /* muted navy-black surface, sits just above canvas in value */
+--color-blueheading: 148 196 214;   
     /* darker dusty blue, for therapist-side headings */
   --color-canvas: 20 24 21;     /* deep teal-gray surface */
   --color-authbg: 22 26 18;
