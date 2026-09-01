@@ -22,7 +22,9 @@ module.exports = {
         canvas: "rgb(var(--color-canvas) / <alpha-value>)",
         blueheading: "rgb(var(--color-blueheading) / <alpha-value>)",
         authbg: "rgb(var(--color-authbg) / <alpha-value>)",
-
+        ink1: "rgb(var(--color-ink-1) / <alpha-value>)",
+        ink2: "rgb(var(--color-ink-2) / <alpha-value>)",
+        ink3: "rgb(var(--color-ink-3) / <alpha-value>)",
         button: "var(--button-clr)",
       },
 

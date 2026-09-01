@@ -235,8 +235,6 @@ export default function Exercises({
 
   return (
     <div>
-     
-
       <div className="relative mx-auto max-w-5xl">
         {/* EXERCISES LIST */}
         {active === null && (
@@ -254,10 +252,10 @@ export default function Exercises({
             </div>
 
             {/* RIGHT — content panel */}
-            <div className="flex-1 bg-background px-6 md:px-10 py-8 md:py-12 flex flex-col">
+            <div className="flex-1 bg-background px-4 sm:px-6 md:px-10 py-6 sm:py-8 md:py-12 flex flex-col">
               <div className="flex-1 flex flex-col">
                 <div className="relative">
-                  <h2 className="font-heading text-heading text-3xl md:text-4xl flex items-center gap-2 relative">
+                  <h2 className="font-heading text-heading text-2xl sm:text-3xl md:text-4xl flex items-center gap-2 relative">
                     Exercises
                     <Leaf className="w-5 h-5 text-green" />
                   </h2>
@@ -278,47 +276,51 @@ export default function Exercises({
                     return (
                       <div
                         key={ex.key}
-                        className={`relative overflow-hidden rounded-2xl p-4 md:p-5 flex items-center gap-4 ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md outline-none [-webkit-tap-highlight-color:transparent] ${a.row}`}
+                        className={`relative overflow-hidden rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4 ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md outline-none [-webkit-tap-highlight-color:transparent] ${a.row}`}
                       >
                         <Sparkles
                           className={`absolute top-3 left-3 w-3 h-3 ${a.text} opacity-40`}
                         />
 
                         <Sparkles
-                          className={`absolute bottom-3 right-24 w-2.5 h-2.5 ${a.text} opacity-30`}
+                          className={`absolute top-3 right-3 w-2.5 h-2.5 ${a.text} opacity-30`}
                         />
 
-                        <div
-                          className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shrink-0 shadow-sm ${a.icon}`}
-                        >
-                          <Icon className="w-6 h-6 text-background" />
-                        </div>
+                        {/* icon + text — stays a row on every breakpoint */}
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div
+                            className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shrink-0 shadow-sm ${a.icon}`}
+                          >
+                            <Icon className="w-6 h-6 text-background" />
+                          </div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-text text-base md:text-lg flex items-center gap-1.5">
-                            {ex.title}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-text text-base md:text-lg flex items-center gap-1.5">
+                              {ex.title}
 
-                            <TitleIcon className={`w-4 h-4 ${a.text}`} />
+                              <TitleIcon className={`w-4 h-4 ${a.text}`} />
 
-                            {isDone && (
-                              <CheckCircle2 className="w-4 h-4 text-green ml-0.5" />
+                              {isDone && (
+                                <CheckCircle2 className="w-4 h-4 text-green ml-0.5" />
+                              )}
+                            </div>
+
+                            <div className="text-sm opacity-60 mt-0.5">
+                              {ex.description}
+                            </div>
+
+                            {ex.meta && (
+                              <div className="text-[11px] opacity-40 mt-1">
+                                {ex.meta}
+                              </div>
                             )}
                           </div>
-
-                          <div className="text-sm opacity-60 mt-0.5">
-                            {ex.description}
-                          </div>
-
-                          {ex.meta && (
-                            <div className="text-[11px] opacity-40 mt-1">
-                              {ex.meta}
-                            </div>
-                          )}
                         </div>
 
+                        {/* button — full width under the text on mobile, fixed width on the right from sm up */}
                         <button
                           onClick={() => setActive(ex.key)}
-                          className="shrink-0 flex items-center justify-center gap-1.5 bg-button-shape bg-contain bg-no-repeat bg-center font-body font-semibold text-background text-xs md:text-sm w-36 py-3 outline-none [-webkit-tap-highlight-color:transparent]"
+                          className="shrink-0 flex items-center justify-center gap-1.5 bg-button-shape bg-contain bg-no-repeat bg-center font-body font-semibold text-background text-xs md:text-sm w-full sm:w-36 py-3 outline-none [-webkit-tap-highlight-color:transparent]"
                         >
                           {isDone ? "Restart" : ex.cta}
 

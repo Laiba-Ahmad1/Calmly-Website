@@ -39,7 +39,7 @@ export default async function TherapistReportDetailPage({
     .join(" · ");
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <Link
         href="/therapist/reports"
         className="font-body text-sm text-blueheading underline-offset-4 hover:underline"

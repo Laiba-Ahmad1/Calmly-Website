@@ -98,22 +98,24 @@ function VerifyEmailForm() {
 
   return (
     <main>
-      <h1 className="font-bold text-background text-3xl mb-1">Verify your email</h1>
-      <p className="text-sm text-background/70 mb-8">
+      <h1 className="font-bold text-background text-3xl mb-1 dark:text-heading">
+        Verify your email
+      </h1>
+      <p className="text-sm text-background/70 mb-8 dark:text-text/70">
         {isPendingLogin
           ? "Your account needs email verification before you can log in. We've sent a fresh code."
           : "We sent a 6-digit code to your email. Enter it below to activate your account."}
         {email && (
           <>
             {" "}
-            <span className="font-semibold text-background">{email}</span>
+            <span className="font-semibold text-background dark:text-text">{email}</span>
           </>
         )}
       </p>
 
       <form onSubmit={handleVerify} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold mb-1 text-background">
+          <label className="block text-sm font-semibold mb-1 text-background dark:text-text">
             Verification code
           </label>
           <input
@@ -127,11 +129,11 @@ function VerifyEmailForm() {
               setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
             }
             placeholder="••••••"
-            className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-center text-lg tracking-[0.5em] outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+            className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-center text-lg tracking-[0.5em] text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         {notice && <p className="text-sm text-heading">{notice}</p>}
 
         <Button
@@ -147,7 +149,7 @@ function VerifyEmailForm() {
           type="button"
           onClick={handleResend}
           disabled={resending || cooldown > 0}
-          className="w-full text-center text-sm text-background/70 underline disabled:opacity-50"
+          className="w-full text-center text-sm text-background/70 underline disabled:opacity-50 dark:text-text/70"
         >
           {cooldown > 0
             ? `Resend code (${cooldown}s)`
@@ -156,9 +158,9 @@ function VerifyEmailForm() {
               : "Resend code"}
         </button>
 
-        <p className="text-center text-sm text-background/70">
+        <p className="text-center text-sm text-background/70 dark:text-text/70">
           Wrong email or need to start over?{" "}
-          <Link href="/signup" className="font-medium text-background underline">
+          <Link href="/signup" className="font-medium text-background underline dark:text-green">
             Sign up again
           </Link>
         </p>

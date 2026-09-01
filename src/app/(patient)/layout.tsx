@@ -44,7 +44,7 @@ export default async function PatientLayout({
   return (
     <div
       dir={language === "ur" ? "rtl" : "ltr"}
-      className="relative min-h-screen overflow-hidden bg-canvas"
+      className="relative min-h-screen overflow-hidden bg-canvas "
     >
       <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/10" />
       <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-white/10" />

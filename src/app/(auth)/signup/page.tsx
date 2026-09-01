@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -131,25 +132,25 @@ export default function SignupPage() {
     <main>
       {step === 1 && (
         <>
-          <h1 className="text-3xl mb-1 text-[rgb((var(--color-background)))]">Create your account</h1>
-          <p className="text-sm text-[rgb((var(--color-background)/70))] mb-8">
+          <h1 className="text-3xl mb-1 text-background dark:text-heading">Create your account</h1>
+          <p className="text-sm text-background/70 mb-8 dark:text-text/70">
             First, tell us which side you're on.
           </p>
 
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => goToStep2("patient")}
-              className="rounded-xl border-2 border-[rgb((var(--color-green)/40))] bg-white p-5 text-left transition hover:border-green"
+              className="rounded-xl border-2 border-green/40 bg-white p-5 text-left transition hover:border-green dark:border-green/25 dark:bg-greensoft dark:hover:border-green/60"
             >
-              <div className="text-sm font-semibold text-[rgb((var(--color-heading)))]">I'm a patient</div>
-              <div className="mt-1 text-xs text-[rgb((var(--color-text)/70))]">
+              <div className="text-sm font-semibold text-heading">I'm a patient</div>
+              <div className="mt-1 text-xs text-text/70">
                 Journal, track mood, grow your plant.
               </div>
             </button>
 
             <button
               onClick={() => goToStep2("therapist")}
-              className="rounded-xl border-2 border-green/40 bg-white p-5 text-left transition hover:border-green"
+              className="rounded-xl border-2 border-green/40 bg-white p-5 text-left transition hover:border-green dark:border-green/25 dark:bg-greensoft dark:hover:border-green/60"
             >
               <div className="text-sm font-semibold text-heading">I'm a therapist</div>
               <div className="mt-1 text-xs text-text/70">
@@ -158,9 +159,9 @@ export default function SignupPage() {
             </button>
           </div>
 
-          <p className="mt-8 text-center text-sm text-[rgb((var(--color-background)/70))]">
+          <p className="mt-8 text-center text-sm text-background/70 dark:text-text/70">
             Already have an account?{" "}
-            <Link href="/login" className="font-medium text-background underline">
+            <Link href="/login" className="font-medium text-background underline dark:text-green">
               Log in
             </Link>
           </p>
@@ -171,15 +172,15 @@ export default function SignupPage() {
         <>
           <button
             onClick={() => setStep(1)}
-            className="mb-4 text-xs text-background/60 hover:underline"
+            className="mb-4 text-xs text-background/60 hover:underline dark:text-text/50"
           >
             ← back
           </button>
 
-          <h1 className="text-3xl mb-1 text-background">
+          <h1 className="text-3xl mb-1 text-background dark:text-heading">
             {role === "patient" ? "About you" : "Verify your practice"}
           </h1>
-          <p className="text-sm text-background/70 mb-6">
+          <p className="text-sm text-background/70 mb-6 dark:text-text/70">
             {role === "patient"
               ? "This helps us tailor your dashboard."
               : "We review documents before you get patient access."}
@@ -187,28 +188,34 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-background">Full name</label>
+              <label className="block text-sm font-medium mb-1 text-background dark:text-text">
+                Full name
+              </label>
               <input
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-background">Email</label>
+              <label className="block text-sm font-medium mb-1 text-background dark:text-text">
+                Email
+              </label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
               />
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-medium mb-1 text-background">Password</label>
+              <label className="block text-sm font-medium mb-1 text-background dark:text-text">
+                Password
+              </label>
               <input
                 type={showPassword ? "text" : "password"}
                 required
@@ -216,22 +223,24 @@ export default function SignupPage() {
                 maxLength={128}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
               />
               <button
-            type="button"
-            onClick={() => setShowPassword((s) => !s)}
-            className="absolute right-3 top-9 text-gray-500 text-sm"
-          >
-             {showPassword ? "⌣" : "👁"}
-          </button>
-              <p className="mt-1 text-xs text-background/60">
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-3 top-9 text-text/50 text-sm dark:text-text/60"
+              >
+                {showPassword ? "⌣" : "👁"}
+              </button>
+              <p className="mt-1 text-xs text-background/60 dark:text-text/50">
                 At least 8 characters, with a letter and a number.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-background">Gender</label>
+              <label className="block text-sm font-medium mb-1 text-background dark:text-text">
+                Gender
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {GENDER_OPTIONS.map((opt) => (
                   <button
@@ -240,8 +249,8 @@ export default function SignupPage() {
                     onClick={() => setGender(opt.value)}
                     className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
                       gender === opt.value
-                        ? "border-green bg-green/20 text-heading"
-                        : "border-green/30 bg-white text-text/70"
+                        ? "border-green bg-green/20 text-heading dark:border-green/70 dark:bg-green/15 dark:text-heading"
+                        : "border-green/30 bg-white text-text/70 dark:border-green/20 dark:bg-greensoft dark:text-text/70"
                     }`}
                   >
                     {opt.label}
@@ -252,7 +261,9 @@ export default function SignupPage() {
 
             {role === "patient" && (
               <div>
-                <label className="block text-sm font-medium mb-1 text-background">Age</label>
+                <label className="block text-sm font-medium mb-1 text-background dark:text-text">
+                  Age
+                </label>
                 <input
                   type="number"
                   required
@@ -260,14 +271,14 @@ export default function SignupPage() {
                   max={120}
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
-                  className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+                  className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
                 />
               </div>
             )}
 
             {role === "patient" && (
               <div>
-                <label className="block text-sm font-medium mb-1 text-background">
+                <label className="block text-sm font-medium mb-1 text-background dark:text-text">
                   What's mostly on your mind?
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -278,8 +289,8 @@ export default function SignupPage() {
                       onClick={() => setAnxietyType(opt.value)}
                       className={`rounded-lg border px-3 py-2 text-xs font-medium transition ${
                         anxietyType === opt.value
-                          ? "border-green bg-green/20 text-heading"
-                          : "border-green/30 bg-white text-text/70"
+                          ? "border-green bg-green/20 text-heading dark:border-green/70 dark:bg-green/15 dark:text-heading"
+                          : "border-green/30 bg-white text-text/70 dark:border-green/20 dark:bg-greensoft dark:text-text/70"
                       }`}
                     >
                       {opt.label}
@@ -291,7 +302,7 @@ export default function SignupPage() {
 
             {role === "therapist" && (
               <div>
-                <label className="block text-sm font-medium mb-1 text-background">
+                <label className="block text-sm font-medium mb-1 text-background dark:text-text">
                   License or certificate
                 </label>
                 <input
@@ -299,28 +310,24 @@ export default function SignupPage() {
                   required
                   accept=".pdf,.png,.jpg,.jpeg"
                   onChange={(e) => setDocument(e.target.files?.[0] ?? null)}
-                  className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-xs file:mr-3 file:rounded-md file:border-0 file:bg-green file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+                  className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-xs text-text file:mr-3 file:rounded-md file:border-0 file:bg-green file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white dark:border-green/25 dark:bg-greensoft dark:text-text"
                 />
-                <p className="mt-1 text-xs text-background/60">
+                <p className="mt-1 text-xs text-background/60 dark:text-text/50">
                   PDF or image. We'll review this before activating your account.
                 </p>
               </div>
             )}
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-              <Button
-                       type="submit"
-                       disabled={loading || signupSuccess}
-                       fillColor="rgb(var(--color-background))"
-                       className="w-full text-green disabled:opacity-60"
-             >{loading ? "Creating account..." : "Create account"}</Button>
-            {/* <button
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full rounded-lg  py-2.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-60"
+              disabled={loading || signupSuccess}
+              fillColor="rgb(var(--color-background))"
+              className="w-full text-green disabled:opacity-60"
             >
               {loading ? "Creating account..." : "Create account"}
-            </button> */}
+            </Button>
           </form>
         </>
       )}

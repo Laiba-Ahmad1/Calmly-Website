@@ -76,20 +76,19 @@ export default function LoginPage() {
       setError("Something went wrong. Try again.");
     } finally {
       setLoading(false);
-
     }
   }
 
   return (
     <main>
-      <h1 className="font-bold text-background text-3xl mb-1 ">Welcome back</h1>
-      <p className="text-sm text-background/70 mb-8">
+      <h1 className="font-bold text-background text-3xl mb-1 dark:text-heading">Welcome back</h1>
+      <p className="text-sm text-background/70 mb-8 dark:text-text/70">
         Log in to continue your journal streak.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold mb-1 text-background">Email</label>
+          <label className="block text-sm font-semibold mb-1 text-background dark:text-text">Email</label>
           <input
             type="email"
             required
@@ -97,12 +96,12 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+            className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
           />
         </div>
 
         <div className="relative">
-          <label className="block text-sm font-semibold mb-1 text-background">Password</label>
+          <label className="block text-sm font-semibold mb-1 text-background dark:text-text">Password</label>
           <input
             type={showPassword ? "text" : "password"}
             required
@@ -110,20 +109,19 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
-            className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
+            className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm text-text outline-none focus:border-green focus:ring-2 focus:ring-green/30 dark:border-green/25 dark:bg-greensoft dark:text-text dark:focus:border-green/70"
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="absolute right-3 top-9 text-gray-500 text-sm"
+            className="absolute right-3 top-9 text-gray-500 text-sm dark:text-text/60"
           >
             {showPassword ? "⌣" : "👁"}
           </button>
         </div>
-        
 
         {notice && <p className="text-sm text-heading">{notice}</p>}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
         <Button
           type="submit"
@@ -135,19 +133,19 @@ export default function LoginPage() {
           {loginSuccess && " ✔"}
         </Button>
 
-        <p className="text-center text-sm text-background/70">
+        <p className="text-center text-sm text-background/70 dark:text-text/70">
           Forgot your password?{" "}
           <Link
             href="/forgot-password"
-            className="font-medium text-background underline"
+            className="font-medium text-background underline dark:text-green"
           >
             Reset it
           </Link>
         </p>
 
-        <p className="text-center text-sm text-background/70">
+        <p className="text-center text-sm text-background/70 dark:text-text/70">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="font-medium text-background underline">
+          <Link href="/signup" className="font-medium text-background underline dark:text-green">
             Sign up
           </Link>
         </p>

@@ -11,13 +11,13 @@ const GROWTH_CARDS = [
     icon: "◉",
     title: "Consistency in the app",
     description:
-      "Showing up regularly — check-ins, exercises, small daily visits — keeps your plant growing steadily.",
+      "Showing up regularly — check-ins, exercises, daily journals, small daily visits — keeps your plant growing steadily.",
   },
   {
     icon: "✎",
     title: "Self-awareness in journal",
     description:
-      "Writing honestly about how you feel helps your plant grow deeper roots, not just taller leaves.",
+      "Writing honestly about how you feel, recognizing patterns in your anxiety , self awareness — helps your plant grow deeper roots, not just taller leaves.",
   },
   {
     icon: "♡",

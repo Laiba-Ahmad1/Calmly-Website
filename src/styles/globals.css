@@ -48,6 +48,9 @@
     /* darker dusty blue, for therapist-side headings */
   --color-canvas: 20 24 21;     /* deep teal-gray surface */
   --color-authbg: 22 26 18;
+  --color-ink-1: 240 244 235;
+--color-ink-2: 176 188 168;
+--color-ink-3: 118 130 112;
 
   color-scheme: dark; /* tells the browser to dark-theme native form controls, scrollbars */
 }
