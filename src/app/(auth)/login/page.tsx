@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -25,7 +26,7 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
+    setLoginSuccess(false);
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       setError("Please enter your email address.");
@@ -61,7 +62,7 @@ export default function LoginPage() {
         setError(data.error || "Login failed");
         return;
       }
-
+      setLoginSuccess(true);
       if (data.role === "admin") {
         router.push("/admin/therapists");
         return;
@@ -74,6 +75,7 @@ export default function LoginPage() {
       setError("Something went wrong. Try again.");
     } finally {
       setLoading(false);
+
     }
   }
 
@@ -111,16 +113,18 @@ export default function LoginPage() {
           />
         </div>
 
+
         {notice && <p className="text-sm text-heading">{notice}</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <Button
           type="submit"
-          disabled={loading}
+          disabled={loading || loginSuccess}
           fillColor="rgb(var(--color-background))"
-          className="w-full text-green"
+          className="w-full text-green disabled:opacity-60"
         >
           {loading ? "Logging in..." : "Log in"}
+          {loginSuccess && " ✅"}
         </Button>
 
         <p className="text-center text-sm text-background/70">

@@ -50,3 +50,18 @@
 
   color-scheme: dark; /* tells the browser to dark-theme native form controls, scrollbars */
 }
+
+input[type="password"] {
+    -webkit-text-security: disc; /* WebKit-specific */
+    caret-color: auto;
+}
+/* Hide password reveal button in Edge */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+/* Hide any default icons in WebKit browsers */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+    display: none;
+}

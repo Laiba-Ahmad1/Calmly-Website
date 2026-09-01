@@ -59,6 +59,8 @@ export default function SignupPage() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   function goToStep2(selectedRole: Role) {
     setRole(selectedRole);
@@ -116,6 +118,7 @@ export default function SignupPage() {
         return;
       }
 
+      setSignupSuccess(true);
       router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
     } catch {
       setError("Something went wrong. Try again.");
@@ -204,10 +207,10 @@ export default function SignupPage() {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium mb-1 text-background">Password</label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 minLength={8}
                 maxLength={128}
@@ -215,6 +218,13 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-green/40 bg-white px-4 py-2.5 text-sm outline-none focus:border-green focus:ring-2 focus:ring-green/30"
               />
+              <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute right-3 top-9 text-gray-500 text-sm"
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
               <p className="mt-1 text-xs text-background/60">
                 At least 8 characters, with a letter and a number.
               </p>
@@ -300,7 +310,7 @@ export default function SignupPage() {
             {error && <p className="text-sm text-red-600">{error}</p>}
               <Button
                        type="submit"
-                       disabled={loading}
+                       disabled={loading || signupSuccess}
                        fillColor="rgb(var(--color-background))"
                        className="w-full text-green disabled:opacity-60"
              >{loading ? "Creating account..." : "Create account"}</Button>
