@@ -15,6 +15,19 @@ export interface IPatientAIReport extends Document {
   strugglingDimensions: string[];
   dimensionScores: Record<string, number>;
 
+  // Per-day anxiety indicator (7 elements, one per day of the report week).
+  // Derived deterministically from Journal.mood + Journal.sleepQuality by
+  // src/lib/ai/dailyAnxietyTrend.ts. Older reports predate this field and
+  // leave it undefined — the UI guards with Array.isArray().
+  dailyTrend?: {
+    dayIndex: number;
+    date: Date;
+    score: number | null;
+    level: "low" | "moderate" | "high" | "none";
+    mood: number | null;
+    sleepQuality: number | null;
+  }[];
+
   // Computed directly from DB — never AI-generated, so these numbers are always trustworthy
   stats: {
     journalDays: number;
@@ -49,6 +62,25 @@ const PatientAIReportSchema = new Schema<IPatientAIReport>(
 
     strugglingDimensions: [{ type: String }],
     dimensionScores: { type: Schema.Types.Mixed, default: {} },
+
+    dailyTrend: {
+      type: [
+        {
+          _id: false,
+          dayIndex: { type: Number, required: true },
+          date: { type: Date, required: true },
+          score: { type: Number, default: null },
+          level: {
+            type: String,
+            enum: ["low", "moderate", "high", "none"],
+            default: "none",
+          },
+          mood: { type: Number, default: null },
+          sleepQuality: { type: Number, default: null },
+        },
+      ],
+      default: undefined,
+    },
 
     stats: {
       journalDays: { type: Number, default: 0 },

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed:questions": "tsx src/seed/seedQuizQuestions.ts"
+    "seed:questions": "tsx src/seed/seedQuizQuestions.ts",
+    "seed:demo": "tsx scripts/seedDemo.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

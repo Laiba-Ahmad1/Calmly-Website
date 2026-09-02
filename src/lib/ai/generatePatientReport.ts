@@ -11,6 +11,7 @@ import TherapistPatient from "@/models/TherapistPatient";
 import { createNotification } from "@/lib/notifications";
 import { callAI } from "@/lib/quiz/aiClient";
 import { getCurrentWeekNumber, getWeekWindow } from "@/lib/quiz/weeks";
+import { computeDailyAnxietyTrend, formatTrendForPrompt } from "@/lib/ai/dailyAnxietyTrend";
 
 function trend(current: number | null, previous: number | null): "up" | "down" | "flat" | null {
   if (current === null || previous === null) return null;
@@ -29,10 +30,14 @@ export async function generatePatientReport(userId: string) {
 
   const user = await Users.findById(userId).select("name createdAt");
   const patientProfile = await PatientProfile.findOne({ userId });
-  if (!user || !patientProfile) return null;
+  if (!user || !patientProfile) {
+    return null;
+  }
 
   const currentWeekNumber = getCurrentWeekNumber(new Date(user.createdAt));
-  if (currentWeekNumber < 2) return null; // no completed week yet
+  if (currentWeekNumber < 2) {
+    return null;
+  }
 
   const targetWeek = currentWeekNumber - 1;
   const { weekStart, weekEnd } = getWeekWindow(new Date(user.createdAt), targetWeek);
@@ -100,6 +105,10 @@ export async function generatePatientReport(userId: string) {
     taskCompleted,
   };
 
+  // Per-day anxiety indicator for the chart + AI prompt. Pure function of
+  // the journal rows already loaded above — no extra DB hit.
+  const dailyTrend = computeDailyAnxietyTrend(journalEntries, weekStart);
+
   // ---- Build AI prompt, handing it the real numbers to narrate around ----
   const journalText = journalEntries.length
     ? journalEntries
@@ -125,8 +134,14 @@ Computed stats for this week:
 - Quiz: ${stats.quizCompleted ? `completed, total score ${stats.quizTotalScore} (trend vs last week: ${stats.quizTrend ?? "no prior data"})` : "not completed"}
 - Exercises completed: ${Object.entries(stats.exerciseCounts).map(([type, count]) => `${type}: ${count}`).join(", ") || "none"}
 - Therapist-assigned task: ${stats.taskText ? `"${stats.taskText}" (${stats.taskCompleted ? "completed during the week" : "not completed during the week"})` : "none assigned"}
+- ${formatTrendForPrompt(dailyTrend)}
 
 Patient's anxiety type: ${patientProfile.anxietyType}
+
+Daily mood & sleep pattern rules:
+- If the pattern above shows >= 3 days with data and a coherent shape (rising, falling, mid-week peak, etc.), you MAY describe that shape observationally in "observedPatterns" using language like "the recorded data shows..." or "the logged week shows...".
+- Never diagnose, never call this "clinical anxiety", and never narrate across no-data gaps (do not interpolate between two data days separated by missing days).
+- If < 3 days have data, do NOT describe any daily pattern from this row — mention only that data coverage was sparse if relevant.
 
 Journal entries this week (for tone/context and identifying patterns/triggers only):
 ${journalText}
@@ -146,7 +161,9 @@ Respond as ONLY a JSON object in this exact shape, no markdown fences, no extra 
 }`;
 
   const raw = await callAI(prompt, { maxTokens: 1600, temperature: 0.4 });
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
 
   let parsed: {
     weeklyOverview: string;
@@ -177,6 +194,7 @@ Respond as ONLY a JSON object in this exact shape, no markdown fences, no extra 
       ? Object.fromEntries(quizResult.dimensionScores)
       : {},
     stats,
+    dailyTrend,
   });
 
   // Notify every actively connected therapist that the report is ready.

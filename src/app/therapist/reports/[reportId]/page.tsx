@@ -8,6 +8,8 @@ import { getReportForTherapist } from "@/lib/therapist/reports";
 import { formatDate, formatWeekRange } from "@/lib/format";
 import { getTherapistT } from "@/lib/i18n/server";
 import { interpolate } from "@/lib/i18n/dictionaries";
+import DailyAnxietyTrendChart from "@/components/therapist/DailyAnxietyTrendChart";
+import type { TrendChartPoint, TrendChartLabels } from "@/components/therapist/DailyAnxietyTrendChart";
 
 export default async function TherapistReportDetailPage({
   params,
@@ -17,7 +19,7 @@ export default async function TherapistReportDetailPage({
   const therapist = await requireTherapist();
   if (!therapist) redirect("/login");
 
-  const [{ t }, data] = await Promise.all([
+  const [{ t, language }, data] = await Promise.all([
     getTherapistT(therapist._id.toString()),
     getReportForTherapist(therapist._id.toString(), params.reportId),
   ]);
@@ -37,6 +39,32 @@ export default async function TherapistReportDetailPage({
   const exerciseSummary = Object.entries(stats.exerciseCounts ?? {})
     .map(([type, count]) => `${type.replace("_", " ")} ×${count}`)
     .join(" · ");
+
+  // Chart points are formatted server-side so Intl never hydrates on the
+  // client (avoids locale/timezone mismatches between server and browser).
+  const locale = language === "ur" ? "ur-PK" : "en-US";
+  const wdFmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  const dFmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
+  const trendPoints: TrendChartPoint[] | null = Array.isArray(report.dailyTrend)
+    ? report.dailyTrend.map((p): TrendChartPoint => {
+        const date = new Date(p.date);
+        return {
+          dayIndex: p.dayIndex,
+          weekday: wdFmt.format(date),
+          dateLabel: dFmt.format(date),
+          mood: p.mood ?? null,
+          sleepQuality: p.sleepQuality ?? null,
+        };
+      })
+    : null;
+
+  const trendLabels: TrendChartLabels = {
+    mood: t("t_report_ms_mood"),
+    sleep: t("t_report_ms_sleep"),
+    noData: t("t_report_ms_nodata"),
+    empty: t("t_report_ms_empty"),
+    scale: t("t_report_ms_scale"),
+  };
 
   return (
     <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
@@ -69,6 +97,23 @@ export default async function TherapistReportDetailPage({
             {report.weeklyOverview}
           </p>
         </section>
+
+        {trendPoints && (
+          <section>
+            <h2 className="font-body text-lg font-extrabold text-blueheading">
+              {t("t_report_ms_title")}
+            </h2>
+            <p className="mt-1 font-body text-xs text-text/60">
+              {t("t_report_ms_subtitle")}
+            </p>
+            <div className="mt-4 rounded-2xl border border-blue/20 bg-bluesoft/40 p-4 sm:p-5">
+              <DailyAnxietyTrendChart points={trendPoints} labels={trendLabels} />
+            </div>
+            <p className="mt-2 font-body text-xs italic text-text/40">
+              {t("t_report_ms_caption")}
+            </p>
+          </section>
+        )}
 
         <section>
           <h2 className="font-body text-lg font-extrabold text-blueheading">

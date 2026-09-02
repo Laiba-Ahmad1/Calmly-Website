@@ -231,6 +231,19 @@ const en: Dictionary = {
   t_report_disclaimer:
     "This is a summary of logged information — not a diagnosis.",
 
+  // daily mood & sleep chart
+  t_report_ms_title: "Daily Mood & Sleep Pattern",
+  t_report_ms_subtitle:
+    "A daily view of the patient's recorded mood and sleep quality throughout the week.",
+  t_report_ms_mood: "Mood",
+  t_report_ms_sleep: "Sleep Quality",
+  t_report_ms_scale: "/5",
+  t_report_ms_nodata: "No data",
+  t_report_ms_empty:
+    "No journal entries were logged this week, so no daily pattern can be shown.",
+  t_report_ms_caption:
+    "Based on the patient's self-reported mood and sleep quality — not a clinical measurement.",
+
   // notifications
   t_notif_title: "Notifications",
   t_notif_empty: "You're all caught up.",
@@ -591,6 +604,19 @@ const ur: Dictionary = {
   t_report_task_not_completed: "ہفتے کے دوران مکمل نہیں ہوا",
   t_report_none_assigned: "کوئی کام تفویض نہیں",
   t_report_disclaimer: "یہ درج شدہ معلومات کا خلاصہ ہے — کوئی تشخیص نہیں۔",
+
+  // daily mood & sleep chart
+  t_report_ms_title: "روزانہ موڈ اور نیند کا نمونہ",
+  t_report_ms_subtitle:
+    "ہفتے بھر مریض کے درج شدہ موڈ اور نیند کے معیار کا روزانہ جائزہ۔",
+  t_report_ms_mood: "موڈ",
+  t_report_ms_sleep: "نیند کا معیار",
+  t_report_ms_scale: "/5",
+  t_report_ms_nodata: "کوئی ڈیٹا نہیں",
+  t_report_ms_empty:
+    "اس ہفتے کوئی جرنل اندراج درج نہیں ہوا، اس لیے روزانہ کا نمونہ نہیں دکھایا جا سکتا۔",
+  t_report_ms_caption:
+    "مریض کے خود درج کردہ موڈ اور نیند کے معیار پر مبنی — یہ کوئی طبی پیمائش نہیں ہے۔",
 
   // notifications
   t_notif_title: "اطلاعات",
