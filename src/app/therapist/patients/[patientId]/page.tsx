@@ -1,6 +1,6 @@
 // src/app/therapist/patients/[patientId]/page.tsx
-// One connected patient: this week at a glance, assigned to-dos, advice,
-// weekly feedback, quiz review, latest weekly report, and recent journals.
+// One connected patient: this week at a glance, advice, weekly feedback,
+// quiz review, latest weekly report, and recent journals.
 // Relationship is verified server-side. The workspace language (English/
 // Urdu) comes from the therapist's profile; patient-authored content
 // (journals, names) is never translated.
@@ -8,7 +8,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireTherapist } from "@/lib/therapist/guard";
 import { getPatientOverview } from "@/lib/therapist/patients";
-import AssignTaskForm from "@/components/therapist/AssignTaskForm";
 import AssignAdviceForm from "@/components/therapist/AssignAdviceForm";
 import RemoveAdviceButton from "@/components/therapist/RemoveAdviceButton";
 import FeedbackForm from "@/components/therapist/FeedbackForm";
@@ -75,8 +74,6 @@ export default async function TherapistPatientDetailPage({
     quizThisWeek,
     latestQuiz,
     exerciseCountsThisWeek,
-    activeTasks,
-    recentCompletedTasks,
     latestReport,
   } = overview;
 
@@ -116,14 +113,6 @@ export default async function TherapistPatientDetailPage({
     : [];
 
   const reportStats = latestReport?.stats ?? null;
-
-  const taskLabels = {
-    placeholder: t("t_task_placeholder"),
-    assign: t("t_task_assign"),
-    assigning: t("t_task_assigning"),
-    assigned: t("t_task_assigned"),
-    error: t("t_task_error"),
-  };
 
   const adviceLabels = {
     newAdvice: t("t_advice_new"),
@@ -296,62 +285,6 @@ export default async function TherapistPatientDetailPage({
             }
           />
         </dl>
-      </section>
-
-      {/* Assigned to-dos */}
-      <section className="mt-10">
-        <h2 className="font-body text-lg font-extrabold text-blueheading">
-          {t("t_pd_tasks_title")}
-        </h2>
-        <p className="mt-1 font-body text-xs text-text/50">
-          {t("t_pd_tasks_hint")}
-        </p>
-
-        {activeTasks.length > 0 ? (
-          <div className="mt-4">
-            {activeTasks.map((task: any) => (
-              <div
-                key={task._id.toString()}
-                className="border-b border-blue/15 py-3"
-              >
-                <p className="font-body text-sm font-semibold text-text">
-                  {task.text}
-                </p>
-                <p className="mt-0.5 font-body text-xs text-text/50">
-                  {interpolate(t("t_pd_assigned"), {
-                    date: formatShortDate(task.assignedAt),
-                  })}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 font-body text-sm text-text/60">
-            {t("t_pd_tasks_none")}
-          </p>
-        )}
-
-        {recentCompletedTasks.length > 0 && (
-          <div className="mt-4">
-            <p className="font-body text-xs font-semibold uppercase tracking-wide text-text/40">
-              {t("t_pd_recently_completed")}
-            </p>
-            {recentCompletedTasks.map((task: any) => (
-              <div key={task._id.toString()} className="py-2">
-                <p className="font-body text-sm text-text/60 line-through">
-                  {task.text}
-                </p>
-                <p className="mt-0.5 font-body text-xs text-text/40">
-                  {interpolate(t("t_pd_completed_via_journal"), {
-                    date: formatShortDate(task.completedAt),
-                  })}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <AssignTaskForm patientId={params.patientId} labels={taskLabels} />
       </section>
 
       {/* Advice */}

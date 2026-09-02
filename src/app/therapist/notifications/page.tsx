@@ -20,7 +20,7 @@ export default async function TherapistNotificationsPage() {
   }
 
   return (
-    <div>
+    <div className="rounded-[2rem] bg-background p-6 shadow-sm sm:p-10">
       <h1 className="font-body text-3xl font-extrabold text-blueheading">
         {t("t_notif_title")}
       </h1>

@@ -121,72 +121,7 @@ const NAV: { want: string; go: string }[] = [
   { want: "Change language", go: "Settings" },
 ];
 
-// A literal little trail map — parchment texture, contour rings, compass
-// rose, and a dashed path linking numbered waypoints down the page.
-function GuideMapBackground({ count }: { count: number }) {
-  const pathD =
-    "M60 20 C 20 90, 90 130, 50 200 S 100 320, 55 400 S 95 520, 60 620 S 90 740, 55 840 S 90 950, 60 1040";
 
-  // evenly space waypoint dots along the visual length of the trail
-  const stops = Array.from({ length: count }, (_, i) => 20 + (i * 1000) / (count - 1 || 1));
-
-  return (
-    <svg
-      viewBox="0 0 120 1080"
-      preserveAspectRatio="none"
-      className="absolute inset-0 w-full h-full"
-      aria-hidden="true"
-    >
-      {/* parchment base */}
-      <rect width="120" height="1080" fill="rgb(var(--color-background))" />
-
-      {/* fine dot grid, like graph/survey paper */}
-      <pattern id="mapDots" width="6" height="6" patternUnits="userSpaceOnUse">
-        <circle cx="1" cy="1" r="0.4" fill="rgb(var(--color-text))" opacity="0.08" />
-      </pattern>
-      <rect width="120" height="1080" fill="url(#mapDots)" />
-
-      {/* topographic contour rings */}
-      <circle cx="15" cy="60" r="22" fill="none" stroke="rgb(var(--color-green))" strokeWidth="0.6" opacity="0.18" />
-      <circle cx="15" cy="60" r="34" fill="none" stroke="rgb(var(--color-green))" strokeWidth="0.6" opacity="0.12" />
-      <circle cx="108" cy="300" r="20" fill="none" stroke="rgb(var(--color-lavender))" strokeWidth="0.6" opacity="0.18" />
-      <circle cx="108" cy="300" r="32" fill="none" stroke="rgb(var(--color-lavender))" strokeWidth="0.6" opacity="0.12" />
-      <circle cx="10" cy="620" r="24" fill="none" stroke="rgb(var(--color-peach))" strokeWidth="0.6" opacity="0.16" />
-      <circle cx="10" cy="620" r="36" fill="none" stroke="rgb(var(--color-peach))" strokeWidth="0.6" opacity="0.1" />
-      <circle cx="105" cy="900" r="22" fill="none" stroke="rgb(var(--color-green))" strokeWidth="0.6" opacity="0.16" />
-
-      {/* the trail */}
-      <path
-        d={pathD}
-        fill="none"
-        stroke="rgb(var(--color-green))"
-        strokeWidth="1.4"
-        strokeDasharray="0.5 5"
-        strokeLinecap="round"
-        opacity="0.55"
-      />
-
-      {/* waypoint pins along the trail */}
-      {stops.map((y, i) => (
-        <g key={i} transform={`translate(${58 + (i % 2 === 0 ? -6 : 6)}, ${y})`}>
-          <circle r="3.2" fill="rgb(var(--color-green))" opacity="0.7" />
-          <circle r="1.2" fill="rgb(var(--color-background))" />
-        </g>
-      ))}
-
-      {/* small compass rose, top right */}
-      <g transform="translate(100, 30)" opacity="0.35">
-        <circle r="12" fill="none" stroke="rgb(var(--color-heading))" strokeWidth="0.6" />
-        <path d="M0 -12 L2.4 0 L0 12 L-2.4 0 Z" fill="rgb(var(--color-heading))" opacity="0.5" />
-        <path d="M-12 0 L0 -2.4 L12 0 L0 2.4 Z" fill="rgb(var(--color-heading))" opacity="0.3" />
-      </g>
-
-      {/* little leaf/foliage marks, like a map legend */}
-      <path d="M20 950 C 15 940, 5 940, 3 955 C 14 958, 22 956, 20 950Z" fill="rgb(var(--color-green))" opacity="0.25" />
-      <path d="M100 500 C 95 490, 85 490, 83 505 C 94 508, 102 506, 100 500Z" fill="rgb(var(--color-lavender))" opacity="0.25" />
-    </svg>
-  );
-}
 
 export default function GuideToCalmly() {
   const [open, setOpen] = useState<string | null>("dashboard");
@@ -194,7 +129,7 @@ export default function GuideToCalmly() {
   return (
     <div className="relative mx-auto max-w-4xl">
       <div className="relative w-full rounded-[2rem] overflow-hidden shadow-xl bg-background ring-1 ring-text/5">
-        <GuideMapBackground count={SECTIONS.length} />
+        
 
         <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10">
           {/* header */}
@@ -262,7 +197,7 @@ export default function GuideToCalmly() {
           </div>
 
           {/* quick nav */}
-          <div className="mt-6 rounded-2xl bg-canvas ring-1 ring-text/10 px-4 py-4">
+          <div className="mt-6 rounded-2xl  bg-background ring-1 ring-text/10 px-4 py-4">
             <div className="flex items-center gap-1.5 mb-3">
               <Compass className="w-3.5 h-3.5 text-green" />
               <span className="text-xs font-semibold text-heading uppercase tracking-wide">
@@ -292,3 +227,4 @@ export default function GuideToCalmly() {
     </div>
   );
 }   
+

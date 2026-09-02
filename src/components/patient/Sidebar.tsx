@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 export interface SidebarLabels {
   home: string;
   feedback: string;
-  tasks: string;
   therapists: string;
   guide: string;
   settings: string;
@@ -18,7 +17,6 @@ export interface SidebarLabels {
 const NAV_KEYS = [
   { href: "/home", icon: "⌂", key: "home" },
   { href: "/feedback", icon: "▦", key: "feedback" },
-  { href: "/tasks", icon: "☑", key: "tasks" },
   { href: "/therapistFind", icon: "⚕", key: "therapists" },
   { href: "/guide", icon: "🕮", key: "guide" },
   { href: "/settings", icon: "⚙", key: "settings" },
