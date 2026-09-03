@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import type { ElementType } from "react";
+import Link from "next/link";
 import {
   Leaf,
   Sparkles,
@@ -258,6 +259,7 @@ export default function Exercises({
                   <h2 className="font-heading text-heading text-2xl sm:text-3xl md:text-4xl flex items-center gap-2 relative">
                     Exercises
                     <Leaf className="w-5 h-5 text-green" />
+                    
                   </h2>
 
                   <p className="mt-2 max-w-sm relative text-sm opacity-60">

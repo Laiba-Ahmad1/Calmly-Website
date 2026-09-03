@@ -39,12 +39,16 @@ export default function JournalPageClient({
 
   return (
     <div className="relative mx-auto max-w-4xl">
-      <div className="mb-4 flex justify-end px-2">
+      <div className="mb-4 flex  justify-between px-2">
         <Link
           href="/journals"
           className="rounded-full border border-white/40 bg-white/10 px-4 py-1.5 font-body text-xs font-semibold text-white/90 backdrop-blur-sm transition hover:bg-white/20"
         >
           📖 View Previous Journals
+        </Link>
+        
+        <Link href="/home" className="rounded-full border border-white/40 bg-white/10 px-4 py-1.5 font-body text-xs font-semibold text-white/90 backdrop-blur-sm transition hover:bg-white/20">
+          ← Back
         </Link>
       </div>
       <JournalForm />
