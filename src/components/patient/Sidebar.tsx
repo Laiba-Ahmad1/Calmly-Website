@@ -2,8 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 
 export interface SidebarLabels {
   home: string;
@@ -34,8 +34,11 @@ export default function Sidebar({
   notificationCount?: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false); // controls the slide transition
+  const [isPending, startTransition] = useTransition();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
   const initial = userName.trim().charAt(0).toUpperCase() || "?";
 
   function openMenu() {
@@ -53,13 +56,42 @@ export default function Sidebar({
     return () => setMounted(false);
   }, []);
 
+  // Once the transition resolves (new route committed), clear the pending link.
+  useEffect(() => {
+    if (!isPending) setPendingHref(null);
+  }, [isPending]);
+
+  function handleNavClick(e: React.MouseEvent, href: string) {
+    // already on this page, or already navigating somewhere — do nothing extra
+    if (pathname === href || isPending) {
+      e.preventDefault();
+      return;
+    }
+
+    e.preventDefault();
+    setPendingHref(href);
+    startTransition(() => {
+      router.push(href);
+    });
+    // menu closes right away so the loading state is visible on the trigger
+    // button / page underneath rather than hidden behind the still-open drawer
+    closeMenu();
+  }
+
   function BellLink({ onClick }: { onClick?: () => void }) {
+    const bellPending = isPending && pendingHref === "/notifications";
     return (
       <Link
         href="/notifications"
-        onClick={onClick}
+        onClick={(e) => {
+          handleNavClick(e, "/notifications");
+          onClick?.();
+        }}
         aria-label={labels.notifications}
-        className="relative flex h-8 w-8 items-center justify-center rounded-full text-text/60 transition hover:bg-green/10 hover:text-green"
+        aria-busy={bellPending}
+        className={`relative flex h-8 w-8 items-center justify-center rounded-full text-text/60 transition hover:bg-green/10 hover:text-green ${
+          bellPending ? "cursor-wait opacity-50" : ""
+        }`}
       >
         <svg
           viewBox="0 0 24 24"
@@ -75,7 +107,7 @@ export default function Sidebar({
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.7 21a2 2 0 0 1-3.4 0" />
         </svg>
-        {notificationCount > 0 && (
+        {notificationCount > 0 && !bellPending && (
           <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-green px-1 font-body text-[10px] font-bold text-background">
             {notificationCount > 9 ? "9+" : notificationCount}
           </span>
@@ -131,24 +163,30 @@ export default function Sidebar({
                 {NAV_KEYS.map((item) => {
                   const active =
                     pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                  const linkPending = isPending && pendingHref === item.href;
 
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={closeMenu}
+                      onClick={(e) => handleNavClick(e, item.href)}
+                      aria-busy={linkPending}
                       className={`flex items-center gap-3 rounded-xl px-4 py-3 font-body text-sm font-medium transition ${
                         active
                           ? "bg-green/20 text-heading"
                           : "text-text/70 hover:bg-green/10"
-                      }`}
+                      } ${linkPending ? "cursor-wait opacity-50" : ""}`}
                     >
                       <span
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green ${
                           active ? "bg-green/25" : "bg-green/15"
                         }`}
                       >
-                        {item.icon}
+                        {linkPending ? (
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-green/30 border-t-green" />
+                        ) : (
+                          item.icon
+                        )}
                       </span>
                       {labels[item.key]}
                     </Link>
@@ -158,8 +196,11 @@ export default function Sidebar({
 
               <Link
                 href="/profile"
-                onClick={closeMenu}
-                className="mt-4 flex items-center gap-3 rounded-xl border border-green/20 bg-green/10 px-3 py-3 transition hover:bg-green/15"
+                onClick={(e) => handleNavClick(e, "/profile")}
+                aria-busy={isPending && pendingHref === "/profile"}
+                className={`mt-4 flex items-center gap-3 rounded-xl border border-green/20 bg-green/10 px-3 py-3 transition hover:bg-green/15 ${
+                  isPending && pendingHref === "/profile" ? "cursor-wait opacity-50" : ""
+                }`}
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green/25 font-body text-sm font-bold text-heading">
                   {initial}

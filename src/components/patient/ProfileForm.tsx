@@ -50,7 +50,8 @@ export default function ProfileForm({
           age: age.trim() === "" ? null : Number(age),
           language,
         }),
-      });
+      }
+    );
 
       const data = await res.json();
       if (!res.ok) {
@@ -67,9 +68,8 @@ export default function ProfileForm({
     }
   }
 
-  const inputClasses =
-    "w-full rounded-xl border border-green/25 bg-background px-4 py-2.5 font-body text-sm text-text outline-none placeholder:text-text/35 focus:border-green/60";
-
+  const inputClasses = "w-full rounded-xl border border-green/25 bg-background px-4 py-2.5 font-body text-sm text-text outline-none placeholder:text-text/35 focus:border-green/60";
+  
   return (
     <form onSubmit={handleSubmit} className="mt-4">
       <div className="grid gap-4 sm:grid-cols-2">

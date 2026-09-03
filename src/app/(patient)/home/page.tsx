@@ -168,7 +168,7 @@ export default async function Home() {
                 icon="◉"
                 title={t("home_quiz_card_title")}
                 description={t("home_quiz_card_desc")}
-                disabled={!!thisWeeksResult}
+                // disabled={!!thisWeeksResult}
               />
 
               <HomeLinkCard

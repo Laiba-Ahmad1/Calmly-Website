@@ -55,7 +55,7 @@ const JournalSchema = new Schema<IJournal>(
     },
     todos: [
       {
-        text: { type: String, required: true, trim: true },
+        text: { type: String, required: false, trim: true },
         done: { type: Boolean, default: false },
       },
     ],
