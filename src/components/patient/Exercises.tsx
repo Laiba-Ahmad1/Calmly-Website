@@ -215,10 +215,14 @@ function PottedPlantScene() {
   );
 }
 
-export default function Exercises() {
+interface ExercisesProps {
+  initialExercise?: ExerciseKey | null;
+}
+
+export default function Exercises({ initialExercise = null }: ExercisesProps) {
   const router = useRouter();
 
-  const [active, setActive] = useState<ExerciseKey | null>(null);
+  const [active, setActive] = useState<ExerciseKey | null>(initialExercise);
   const [completed, setCompleted] = useState<Set<ExerciseKey>>(new Set());
 
   const markDone = (key: ExerciseKey) => {
