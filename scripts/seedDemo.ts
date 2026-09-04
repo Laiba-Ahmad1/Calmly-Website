@@ -1,7 +1,7 @@
 // scripts/seedDemo.ts
 // Idempotent demo data seeder. Creates 2 therapists, 3 patients, ~1 month
 // of journals (with variation + gaps for chart testing), quiz results,
-// exercise sessions, tasks, advice, feedback, and triggers the real
+// exercise sessions, advice, feedback, and triggers the real
 // generatePatientReport pipeline for all completed weeks.
 //
 // Run:   npm run seed:demo
@@ -14,7 +14,6 @@ import Users from "@/models/User";
 import PatientProfile from "@/models/PatientProfile";
 import TherapistProfile from "@/models/TherapistProfile";
 import Journal from "@/models/Journal";
-import PatientTask from "@/models/PatientTask";
 import QuizResult from "@/models/QuizResult";
 import ExerciseSession from "@/models/ExerciseSession";
 import TherapistPatient from "@/models/TherapistPatient";
@@ -473,12 +472,6 @@ async function main() {
     PatientProfile.deleteMany({ userId: { $in: allDemoUserIds } }),
     TherapistProfile.deleteMany({ userId: { $in: allDemoUserIds } }),
     Journal.deleteMany({ patientId: { $in: demoPatientIds } }),
-    PatientTask.deleteMany({
-      $or: [
-        { patientId: { $in: demoPatientIds } },
-        { therapistId: { $in: demoTherapistIds } },
-      ],
-    }),
     QuizResult.deleteMany({ userId: { $in: demoPatientIds } }),
     ExerciseSession.deleteMany({ userId: { $in: demoPatientIds } }),
     TherapistPatient.deleteMany({
@@ -721,45 +714,7 @@ async function main() {
     }
   }
 
-  // --- Step 8: therapist-assigned tasks ---
-  console.log("\n--- Seeding therapist tasks ---");
-  const taskTexts = [
-    "Practice the 4-7-8 breathing technique each morning",
-    "Write down three positive things before bed",
-    "Take a 20-minute walk at least 4 times this week",
-    "Try the garden exercise when feeling overwhelmed",
-    "Limit caffeine after 2pm",
-  ];
-
-  for (const p of PATIENTS) {
-    const therapistEmail = ASSIGNMENTS[p.email];
-    const patientId = userMap.get(p.email)!;
-    const therapistId = userMap.get(therapistEmail)!;
-    const { weekStart: twStart, weekEnd: twEnd } = getWeekWindow(
-      creationDate,
-      targetWeek
-    );
-
-    // Two tasks: one completed, one not
-    await PatientTask.create({
-      patientId,
-      therapistId,
-      text: taskTexts[targetWeek % taskTexts.length],
-      status: "completed",
-      assignedAt: new Date(twStart.getTime() - 86_400_000),
-      completedAt: new Date(twStart.getTime() + 3 * 86_400_000),
-    });
-    await PatientTask.create({
-      patientId,
-      therapistId,
-      text: taskTexts[(targetWeek + 1) % taskTexts.length],
-      status: "active",
-      assignedAt: twStart,
-    });
-    console.log(`  ${p.name}: 2 tasks (1 completed, 1 active)`);
-  }
-
-  // --- Step 9: therapist advice ---
+  // --- Step 8: therapist advice ---
   console.log("\n--- Seeding therapist advice ---");
   const adviceTexts = [
     {
@@ -793,7 +748,7 @@ async function main() {
     console.log(`  ${p.name}: ${adviceTexts.length} advice entries`);
   }
 
-  // --- Step 10: therapist feedback (for earlier weeks) ---
+  // --- Step 9: therapist feedback (for earlier weeks) ---
   console.log("\n--- Seeding therapist feedback ---");
   for (const p of PATIENTS) {
     const therapistEmail = ASSIGNMENTS[p.email];
@@ -819,7 +774,7 @@ async function main() {
     );
   }
 
-  // --- Step 11: trigger real report generation ---
+  // --- Step 10: trigger real report generation ---
   console.log("\n--- Generating AI reports (real pipeline) ---");
   console.log(
     "  This calls the real AI API. If your AI keys aren't configured, reports will be skipped."
