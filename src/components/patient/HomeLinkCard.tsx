@@ -11,18 +11,21 @@ export default function HomeLinkCard({
   title,
   description,
   disabled = false,
+  completed = false,
 }: {
   href: string;
   icon: string;
   title: string;
   description: string;
   disabled?: boolean;
+  completed?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleClick(e: React.MouseEvent) {
-    // Already-completed card (quiz submitted / journaled today) — block navigation entirely.
+    // Truly blocked card — no navigation at all. `completed` is NOT this;
+    // completed cards stay fully clickable.
     if (disabled) {
       e.preventDefault();
       return;
@@ -34,7 +37,6 @@ export default function HomeLinkCard({
       return;
     }
 
-    // Drive navigation ourselves so we can flip isPending on immediately.
     e.preventDefault();
     startTransition(() => {
       router.push(href);
@@ -50,18 +52,24 @@ export default function HomeLinkCard({
       aria-disabled={disabled || isPending}
       className={`flex items-center gap-4 rounded-2xl border p-5 transition ${
         disabled
-          ? "border-gray-200 bg-green/10  "
+          ? "border-gray-200 bg-green/10 opacity-60 cursor-not-allowed"
           : isLoadingLook
           ? "border-green/30 bg-green/15 opacity-50 cursor-wait pointer-events-none"
+          : completed
+          ? "border-green/40 bg-green/25 hover:-translate-y-0.5 hover:bg-green/30"
           : "border-green/30 bg-green/15 hover:-translate-y-0.5 hover:bg-green/20"
       }`}
     >
       <div
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-green ${
-          disabled || isLoadingLook ? "bg-green/10" : "bg-green/20"
+          disabled || isLoadingLook
+            ? "bg-green/10"
+            : completed
+            ? "bg-green/30"
+            : "bg-green/20"
         }`}
       >
-        {icon}
+        {completed ? "✓" : icon}
       </div>
       <div>
         <p className="font-semibold text-text">{title}</p>

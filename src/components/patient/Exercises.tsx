@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import type { ElementType } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Leaf,
   Sparkles,
@@ -14,6 +14,7 @@ import {
   Flower2,
   CheckCircle2,
 } from "lucide-react";
+
 import BreathingExercise from "./BreathingExercise";
 import ColorMatch from "./ColorMatch";
 import SoundTherapy from "./SoundTherapy";
@@ -22,16 +23,26 @@ import CalmlyGarden from "./calmly-garden/CalmlyGarden";
 type ExerciseKey = "breathing" | "colorMatch" | "sound" | "calmlyGarden";
 type AccentKey = "green" | "lavender" | "peach";
 
-const ACCENTS: Record<AccentKey, { row: string; icon: string; text: string }> =
-  {
-    green: { row: "bg-greensoft", icon: "bg-green", text: "text-green" },
-    lavender: {
-      row: "bg-lavendersoft",
-      icon: "bg-lavender",
-      text: "text-lavender",
-    },
-    peach: { row: "bg-peachsoft", icon: "bg-peach", text: "text-peach" },
-  };
+const ACCENTS: Record<
+  AccentKey,
+  { row: string; icon: string; text: string }
+> = {
+  green: {
+    row: "bg-greensoft",
+    icon: "bg-green",
+    text: "text-green",
+  },
+  lavender: {
+    row: "bg-lavendersoft",
+    icon: "bg-lavender",
+    text: "text-lavender",
+  },
+  peach: {
+    row: "bg-peachsoft",
+    icon: "bg-peach",
+    text: "text-peach",
+  },
+};
 
 const EXERCISES: {
   key: ExerciseKey;
@@ -88,10 +99,14 @@ function PottedPlantScene() {
     <svg
       viewBox="0 0 320 520"
       preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 w-full h-full"
+      className="absolute inset-0 h-full w-full"
       aria-hidden="true"
     >
-      <rect width="320" height="520" fill="rgb(var(--color-greensoft))" />
+      <rect
+        width="320"
+        height="520"
+        fill="rgb(var(--color-greensoft))"
+      />
 
       {/* wavy cream edge that bleeds into the right panel */}
       <path
@@ -158,7 +173,7 @@ function PottedPlantScene() {
         fill="rgb(var(--color-green))"
       />
 
-      {/* a tiny second plant, low-left, for a little life */}
+      {/* tiny second plant */}
       <path
         d="M52 470 C50 445 54 425 52 405"
         stroke="rgb(var(--color-green))"
@@ -200,13 +215,10 @@ function PottedPlantScene() {
   );
 }
 
-export default function Exercises({
-  initialExercise = null,
-}: {
-  // set when opened via /exercises?start=... (e.g. from a therapist advice CTA)
-  initialExercise?: ExerciseKey | null;
-}) {
-  const [active, setActive] = useState<ExerciseKey | null>(initialExercise);
+export default function Exercises() {
+  const router = useRouter();
+
+  const [active, setActive] = useState<ExerciseKey | null>(null);
   const [completed, setCompleted] = useState<Set<ExerciseKey>>(new Set());
 
   const markDone = (key: ExerciseKey) => {
@@ -216,59 +228,113 @@ export default function Exercises({
 
   const renderActive = () => {
     if (active === "breathing") {
-      return <BreathingExercise onBack={() => markDone("breathing")} />;
+      return (
+        <BreathingExercise
+          onBack={() => markDone("breathing")}
+        />
+      );
     }
 
     if (active === "colorMatch") {
-      return <ColorMatch onBack={() => markDone("colorMatch")} />;
+      return (
+        <ColorMatch
+          onBack={() => markDone("colorMatch")}
+        />
+      );
     }
 
     if (active === "sound") {
-      return <SoundTherapy onBack={() => markDone("sound")} />;
+      return (
+        <SoundTherapy
+          onBack={() => markDone("sound")}
+        />
+      );
     }
 
     if (active === "calmlyGarden") {
-      return <CalmlyGarden onBack={() => markDone("calmlyGarden")} />;
+      return (
+        <CalmlyGarden
+          onBack={() => markDone("calmlyGarden")}
+        />
+      );
     }
 
     return null;
   };
 
   return (
-    <div>
-      <div className="relative mx-auto max-w-5xl">
+    <div className="relative min-h-screen overflow-hidden bg-green p-4 sm:p-6 md:p-8">
+      {/* Decorative background */}
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10" />
+
+      <div className="pointer-events-none absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-white/10" />
+
+      <div className="relative mx-auto w-full max-w-5xl">
         {/* EXERCISES LIST */}
         {active === null && (
-          <div className="relative w-full rounded-[2rem] overflow-hidden shadow-xl md:flex bg-background ring-1 ring-text/5">
+          <div className="relative w-full overflow-hidden rounded-[2rem] bg-background shadow-xl ring-1 ring-text/5 md:flex">
+            {/* BACK BUTTON */}
+            <button
+              type="button"
+              onClick={() => router.push("/home")}
+              className="
+                absolute
+                right-5
+                top-5
+                z-20
+                rounded
+                px-1
+                py-1
+                font-body
+                text-sm
+                font-medium
+                text-green
+                underline
+                underline-offset-4
+                transition-opacity
+                hover:opacity-70
+                focus:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-green/30
+                sm:right-7
+                sm:top-6
+                md:right-9
+                md:top-7
+              "
+            >
+              Back
+            </button>
+
             {/* LEFT — brand + potted plant panel */}
-            <div className="hidden md:block relative md:w-[38%] shrink-0 min-h-[640px]">
+            <div className="relative hidden min-h-[640px] shrink-0 md:block md:w-[38%]">
               <PottedPlantScene />
 
-              <div className="absolute top-8 left-8 flex items-center gap-2.5">
-                <Leaf className="w-5 h-5 text-green" />
-                <p className="font-logo text-heading text-xl leading-tight">
+              <div className="absolute left-8 top-8 flex items-center gap-2.5">
+                <Leaf className="h-5 w-5 text-green" />
+
+                <p className="font-logo text-xl leading-tight text-heading">
                   Calmly
                 </p>
               </div>
             </div>
 
             {/* RIGHT — content panel */}
-            <div className="flex-1 bg-background px-4 sm:px-6 md:px-10 py-6 sm:py-8 md:py-12 flex flex-col">
-              <div className="flex-1 flex flex-col">
+            <div className="flex min-w-0 flex-1 flex-col bg-background px-6 py-8 sm:px-7 sm:py-9 md:px-10 md:py-12">
+              <div className="flex flex-1 flex-col">
                 <div className="relative">
-                  <h2 className="font-heading text-heading text-2xl sm:text-3xl md:text-4xl flex items-center gap-2 relative">
+                  <h2 className="relative flex items-center gap-2 font-heading text-3xl text-heading md:text-4xl">
                     Exercises
-                    <Leaf className="w-5 h-5 text-green" />
-                    
+
+                    <Leaf className="h-5 w-5 shrink-0 text-green" />
                   </h2>
 
-                  <p className="mt-2 max-w-sm relative text-sm opacity-60">
+                  <p className="relative mt-2 max-w-sm text-sm opacity-60">
                     Take a moment for yourself. Choose an exercise to relax,
                     focus, and feel better.
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3.5 mt-6">
+                <div className="mt-6 flex flex-col gap-3.5">
                   {EXERCISES.map((ex) => {
                     const a = ACCENTS[ex.accent];
                     const Icon = ex.icon;
@@ -278,55 +344,118 @@ export default function Exercises({
                     return (
                       <div
                         key={ex.key}
-                        className={`relative overflow-hidden rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4 ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md outline-none [-webkit-tap-highlight-color:transparent] ${a.row}`}
+                        className={`
+                          relative
+                          flex
+                          min-w-0
+                          items-center
+                          gap-3
+                          overflow-hidden
+                          rounded-2xl
+                          p-3.5
+                          outline-none
+                          ring-1
+                          ring-black/5
+                          transition-all
+                          duration-300
+                          hover:-translate-y-0.5
+                          hover:shadow-md
+                          sm:gap-4
+                          sm:p-4
+                          md:p-5
+                          ${a.row}
+                        `}
                       >
+                        {/* decorative sparkles */}
                         <Sparkles
-                          className={`absolute top-3 left-3 w-3 h-3 ${a.text} opacity-40`}
+                          className={`absolute left-3 top-3 h-3 w-3 ${a.text} opacity-40`}
                         />
 
                         <Sparkles
-                          className={`absolute top-3 right-3 w-2.5 h-2.5 ${a.text} opacity-30`}
+                          className={`absolute bottom-3 right-24 h-2.5 w-2.5 ${a.text} opacity-30`}
                         />
 
-                        {/* icon + text — stays a row on every breakpoint */}
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div
-                            className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shrink-0 shadow-sm ${a.icon}`}
-                          >
-                            <Icon className="w-6 h-6 text-background" />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-text text-base md:text-lg flex items-center gap-1.5">
-                              {ex.title}
-
-                              <TitleIcon className={`w-4 h-4 ${a.text}`} />
-
-                              {isDone && (
-                                <CheckCircle2 className="w-4 h-4 text-green ml-0.5" />
-                              )}
-                            </div>
-
-                            <div className="text-sm opacity-60 mt-0.5">
-                              {ex.description}
-                            </div>
-
-                            {ex.meta && (
-                              <div className="text-[11px] opacity-40 mt-1">
-                                {ex.meta}
-                              </div>
-                            )}
-                          </div>
+                        {/* exercise icon */}
+                        <div
+                          className={`
+                            flex
+                            h-11
+                            w-11
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-full
+                            shadow-sm
+                            sm:h-12
+                            sm:w-12
+                            md:h-14
+                            md:w-14
+                            ${a.icon}
+                          `}
+                        >
+                          <Icon className="h-5 w-5 text-background sm:h-6 sm:w-6" />
                         </div>
 
-                        {/* button — full width under the text on mobile, fixed width on the right from sm up */}
-                        <button
-                          onClick={() => setActive(ex.key)}
-                          className="shrink-0 flex items-center justify-center gap-1.5 bg-button-shape bg-contain bg-no-repeat bg-center font-body font-semibold text-background text-xs md:text-sm w-full sm:w-36 py-3 outline-none [-webkit-tap-highlight-color:transparent]"
-                        >
-                          {isDone ? "Restart" : ex.cta}
+                        {/* text */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-text sm:text-base md:text-lg">
+                            <span className="min-w-0 truncate">
+                              {ex.title}
+                            </span>
 
-                          <ArrowRight className="w-3.5 h-3.5" />
+                            <TitleIcon
+                              className={`h-4 w-4 shrink-0 ${a.text}`}
+                            />
+
+                            {isDone && (
+                              <CheckCircle2 className="ml-0.5 h-4 w-4 shrink-0 text-green" />
+                            )}
+                          </div>
+
+                          <div className="mt-0.5 text-xs opacity-60 sm:text-sm">
+                            {ex.description}
+                          </div>
+
+                          {ex.meta && (
+                            <div className="mt-1 text-[11px] opacity-40">
+                              {ex.meta}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* start/restart button */}
+                        <button
+                          type="button"
+                          onClick={() => setActive(ex.key)}
+                          className="
+                            flex
+                            w-28
+                            shrink-0
+                            items-center
+                            justify-center
+                            gap-1.5
+                            bg-button-shape
+                            bg-contain
+                            bg-center
+                            bg-no-repeat
+                            py-2.5
+                            font-body
+                            text-[11px]
+                            font-semibold
+                            text-background
+                            outline-none
+                            sm:w-32
+                            sm:text-xs
+                            md:w-36
+                            md:py-3
+                            md:text-sm
+                          "
+                        >
+                          <span className="min-w-0 truncate">
+                            {isDone ? "Restart" : ex.cta}
+                          </span>
+
+                          <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                         </button>
                       </div>
                     );
@@ -337,9 +466,9 @@ export default function Exercises({
           </div>
         )}
 
-        {/* ACTIVE EXERCISE — NO PLANT PANEL */}
+        {/* ACTIVE EXERCISE */}
         {active !== null && (
-          <div className="relative w-full rounded-[2rem] overflow-hidden shadow-xl bg-background ring-1 ring-text/5">
+          <div className="relative w-full overflow-hidden rounded-[2rem] bg-background shadow-xl ring-1 ring-text/5">
             {renderActive()}
           </div>
         )}

@@ -164,27 +164,27 @@ export default async function Home() {
 
             <div className="mt-8 flex flex-col gap-4">
               <HomeLinkCard
-                href="/quiz"
-                icon="◉"
-                title={t("home_quiz_card_title")}
-                description={t("home_quiz_card_desc")}
-                // disabled={!!thisWeeksResult}
-              />
+  href="/quiz"
+  icon="◉"
+  title={t("home_quiz_card_title")}
+  description={t("home_quiz_card_desc")}
+  completed={!!thisWeeksResult}
+/>
 
-              <HomeLinkCard
-                href="/exercises"
-                icon="♡"
-                title={t("home_exercises_card_title")}
-                description={t("home_exercises_card_desc")}
-              />
+<HomeLinkCard
+  href="/exercises"
+  icon="♡"
+  title={t("home_exercises_card_title")}
+  description={t("home_exercises_card_desc")}
+/>
 
-              <HomeLinkCard
-                href="/journal"
-                icon="✎"
-                title={t("home_journal_card_title")}
-                description={t("home_journal_card_desc")}
-                disabled={hasJournaledToday}
-              />
+<HomeLinkCard
+  href="/journal"
+  icon="✎"
+  title={t("home_journal_card_title")}
+  description={t("home_journal_card_desc")}
+  completed={hasJournaledToday}
+/>
             </div>
           </div>
         </div>
