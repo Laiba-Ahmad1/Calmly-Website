@@ -5,7 +5,6 @@ import QuizResult from "@/models/QuizResult";
 import ExerciseSession from "@/models/ExerciseSession";
 import PatientAIReport from "@/models/PatientAIReport";
 import PatientProfile from "@/models/PatientProfile";
-import PatientTask from "@/models/PatientTask";
 import Users from "@/models/User";
 import TherapistPatient from "@/models/TherapistPatient";
 import { createNotification } from "@/lib/notifications";
@@ -45,7 +44,7 @@ export async function generatePatientReport(userId: string) {
   const existing = await PatientAIReport.findOne({ userId, weekStart });
   if (existing) return existing;
 
-  const [journalEntries, quizResult, exerciseSessions, previousReport, weekTasks] = await Promise.all([
+  const [journalEntries, quizResult, exerciseSessions, previousReport] = await Promise.all([
     Journal.find({ patientId: userId, date: { $gte: weekStart, $lt: weekEnd } })
       .sort({ date: 1 })
       .select("date mood sleepQuality feelings reflection"),
@@ -58,17 +57,9 @@ export async function generatePatientReport(userId: string) {
           weekStart: getWeekWindow(new Date(user.createdAt), targetWeek - 1).weekStart,
         })
       : null,
-    // therapist-assigned todo that was active at any point during the week
-    PatientTask.find({
-      patientId: userId,
-      assignedAt: { $lt: weekEnd },
-      $or: [{ completedAt: null }, { completedAt: { $gte: weekStart } }],
-    })
-      .sort({ assignedAt: -1 })
-      .lean(),
   ]);
 
-  if (!journalEntries.length && !quizResult && !exerciseSessions.length && !weekTasks.length) {
+  if (!journalEntries.length && !quizResult && !exerciseSessions.length) {
     return null; // nothing happened this week — don't generate an empty/invented report
   }
 
@@ -82,15 +73,6 @@ export async function generatePatientReport(userId: string) {
     exerciseCounts[session.type] = (exerciseCounts[session.type] ?? 0) + 1;
   }
 
-  // most recently assigned task relevant to this week (may be undefined)
-  const weekTask = weekTasks[0];
-  const taskText = weekTask?.text ?? null;
-  const taskCompleted = weekTask
-    ? weekTask.completedAt != null &&
-      weekTask.completedAt >= weekStart &&
-      weekTask.completedAt < weekEnd
-    : null;
-
   const stats = {
     journalDays,
     moodAvg,
@@ -101,8 +83,6 @@ export async function generatePatientReport(userId: string) {
     quizTotalScore: quizResult?.totalScore ?? null,
     quizTrend: trend(quizResult?.totalScore ?? null, previousReport?.stats.quizTotalScore ?? null),
     exerciseCounts,
-    taskText,
-    taskCompleted,
   };
 
   // Per-day anxiety indicator for the chart + AI prompt. Pure function of
@@ -133,7 +113,6 @@ Computed stats for this week:
 - Average sleep quality: ${stats.sleepAvg ?? "no data"}/5 (trend vs last week: ${stats.sleepTrend ?? "no prior data"})
 - Quiz: ${stats.quizCompleted ? `completed, total score ${stats.quizTotalScore} (trend vs last week: ${stats.quizTrend ?? "no prior data"})` : "not completed"}
 - Exercises completed: ${Object.entries(stats.exerciseCounts).map(([type, count]) => `${type}: ${count}`).join(", ") || "none"}
-- Therapist-assigned task: ${stats.taskText ? `"${stats.taskText}" (${stats.taskCompleted ? "completed during the week" : "not completed during the week"})` : "none assigned"}
 - ${formatTrendForPrompt(dailyTrend)}
 
 Patient's anxiety type: ${patientProfile.anxietyType}
@@ -149,7 +128,7 @@ ${journalText}
 Quiz detail:
 ${quizText}
 
-Write a report with these exact four sections. For "observedPatterns", weave in the computed stats above verbatim where relevant, plus any qualitative patterns you notice in the journal text (recurring topics, timing, triggers) — but never state a number that isn't in the computed stats above. If a therapist-assigned task is present, you may note observationally how it relates to the patient's week (e.g. whether journal entries mention it or an exercise pattern matches it).
+Write a report with these exact four sections. For "observedPatterns", weave in the computed stats above verbatim where relevant, plus any qualitative patterns you notice in the journal text (recurring topics, timing, triggers) — but never state a number that isn't in the computed stats above.
 
 Respond as ONLY a JSON object in this exact shape, no markdown fences, no extra text:
 {
