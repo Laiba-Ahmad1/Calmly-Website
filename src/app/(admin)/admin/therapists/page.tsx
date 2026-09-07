@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import db from "@/lib/db";
+import LogoutButton from "@/components/shared/LogoutButton";
 import TherapistProfile from "@/models/TherapistProfile";
 import AdminTherapistReview from "@/components/admin/AdminTherapistReview";
 
@@ -29,13 +30,16 @@ export default async function AdminPendingTherapistsPage() {
   return (
     <div className="min-h-screen bg-canvas p-6 sm:p-10">
       <div className="mx-auto max-w-4xl">
+        <div className=" flex items-center justify-between">
         <h1 className="mb-1 font-heading text-3xl font-bold text-background">
           Pending therapist verifications
         </h1>
+        <LogoutButton className="bg-rose-200 text-rose-400 hover:bg-rose-300 hover:text-rose-500 p-3 rounded-md border-2 border-red-300" />
+</div>
         <p className="mb-8 text-sm text-background/70">
           {initialTherapists.length} awaiting review
         </p>
-
+         
         <AdminTherapistReview initialTherapists={initialTherapists} />
       </div>
     </div>
