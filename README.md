@@ -717,7 +717,6 @@ The project focuses on demonstrating how AI can be integrated into a real produc
 * [ ] Patient/therapist profiles
 * [ ] English/Urdu interface support
 
-> ⚠️ Update the checkboxes above to `[x]` only for features that are actually complete and working in the current codebase before publishing.
 
 ### Future possibilities
 
